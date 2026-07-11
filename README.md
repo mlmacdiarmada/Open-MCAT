@@ -6,7 +6,7 @@ Open-MCAT is a free, open collection of MCAT practice quizzes organized by *test
 
 Everything is mapped to the official AAMC sections and content categories, so you can drill exactly the idea you're weak on. All questions are **original**, written to mirror MCAT reasoning — never reproduced from any commercial question bank — and the project is, and will stay, free.
 
-🔗 **Live site:** https://mlmacdiarmada.github.io/open-mcat/
+🔗 **Live site:** https://mlmacdiarmada.github.io/Open-MCAT/
 
 ---
 
