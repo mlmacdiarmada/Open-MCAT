@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open MCAT — a free, keyboard-first MCAT question bank</title>
+<style>
+  :root{
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  html[data-theme="dark"]{
+    --bg:#0a0f17; --panel:#0d131d; --raise:#141d2a; --raise2:#1a2534;
+    --border:#1b2634; --border2:#26323f;
+    --text:#e9edf3; --text2:#93a1b6; --text3:#5c6b80;
+    --accent:#5182ff; --accent2:#3a5fbf; --accent-bg:rgba(81,130,255,.13);
+    --ok:#43b581; --ok-bg:rgba(67,181,129,.13); --ok-bd:rgba(67,181,129,.4);
+    --no:#e5645f; --no-bg:rgba(229,100,95,.13); --no-bd:rgba(229,100,95,.4);
+    --track:#1b2634; --glow:rgba(81,130,255,.18);
+  }
+  html[data-theme="light"]{
+    --bg:#ffffff; --panel:#f7f9fc; --raise:#eef2f8; --raise2:#e6ecf4;
+    --border:#e4e9f1; --border2:#d7deea;
+    --text:#0e1725; --text2:#53617a; --text3:#8592a6;
+    --accent:#2f5fe0; --accent2:#2f5fe0; --accent-bg:rgba(47,95,224,.08);
+    --ok:#1a9d68; --ok-bg:rgba(26,157,104,.09); --ok-bd:rgba(26,157,104,.35);
+    --no:#d6483f; --no-bg:rgba(214,72,63,.08); --no-bd:rgba(214,72,63,.35);
+    --track:#e6ecf4; --glow:rgba(47,95,224,.10);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 24px;}
+
+  /* nav */
+  .nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 82%,transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--border);}
+  .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:58px;}
+  .brand{display:flex;align-items:center;gap:9px;}
+  .brand .m{width:24px;height:24px;border-radius:6px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;}
+  .brand .n{font-weight:600;font-size:15px;letter-spacing:-.01em;}
+  .nav .r{display:flex;align-items:center;gap:6px;}
+  .nlink{font-size:13.5px;color:var(--text2);padding:8px 11px;border-radius:7px;transition:color .12s,background .12s;}
+  .nlink:hover{color:var(--text);background:var(--raise);}
+  .iconbtn{width:32px;height:32px;border-radius:7px;border:1px solid var(--border);background:var(--panel);color:var(--text2);
+    display:grid;place-items:center;cursor:pointer;transition:all .12s;}
+  .iconbtn:hover{color:var(--text);border-color:var(--border2);}
+  .iconbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;}
+  .cta{font-size:13.5px;font-weight:600;color:#fff;background:var(--accent);border-radius:8px;padding:8px 15px;transition:background .12s;}
+  .cta:hover{background:var(--accent2);}
+
+  /* hero */
+  .hero{position:relative;padding:96px 0 40px;text-align:center;overflow:hidden;}
+  .hero::before{content:"";position:absolute;top:-140px;left:50%;transform:translateX(-50%);width:760px;height:420px;
+    background:radial-gradient(ellipse at center,var(--glow),transparent 66%);pointer-events:none;}
+  .hero .ey{position:relative;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+    margin-bottom:22px;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:999px;padding:5px 13px;background:var(--panel);}
+  .hero h1{position:relative;font-size:clamp(36px,6vw,60px);font-weight:600;letter-spacing:-.035em;line-height:1.04;margin:0 auto 20px;max-width:16ch;}
+  .hero h1 .g{background:linear-gradient(90deg,var(--accent),#8fb0ff);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hero p{position:relative;font-size:17.5px;color:var(--text2);max-width:60ch;margin:0 auto 32px;line-height:1.6;}
+  .hero .btns{position:relative;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .btn{font-size:15px;font-weight:600;border-radius:10px;padding:12px 22px;cursor:pointer;border:none;transition:background .12s,transform .12s,border-color .12s;display:inline-flex;align-items:center;gap:8px;}
+  .btn.primary{background:var(--accent);color:#fff;}
+  .btn.primary:hover{background:var(--accent2);transform:translateY(-1px);}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border2);}
+  .btn.ghost:hover{background:var(--raise);border-color:var(--text3);}
+  .hero .meta{position:relative;margin-top:22px;font-family:var(--mono);font-size:12px;color:var(--text3);display:flex;gap:18px;justify-content:center;flex-wrap:wrap;}
+
+  /* section scaffolding */
+  .sec{padding:56px 0;border-top:1px solid var(--border);}
+  .sec .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+  .sec h2{font-size:27px;font-weight:600;letter-spacing:-.025em;margin:0 0 12px;}
+  .sec .lead{font-size:16px;color:var(--text2);max-width:60ch;margin:0 0 8px;}
+
+  /* live sample */
+  .demo{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:26px 28px;margin-top:26px;position:relative;}
+  .demo .dhead{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .demo .code{font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--raise2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;}
+  .demo .cat{font-size:12.5px;color:var(--text3);}
+  .demo .tag{margin-left:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--text3);}
+  .demo .stem{font-size:16px;line-height:1.6;margin:0 0 18px;}
+  .demo .stem b{font-weight:650;}
+  ul.ch{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .ch li{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--border);border-radius:9px;padding:12px 14px;cursor:pointer;background:var(--bg);transition:border-color .1s,background .1s;font-size:14.5px;}
+  .ch li:hover{border-color:var(--accent2);background:var(--raise);}
+  .ch li .k{font-family:var(--mono);font-weight:600;font-size:12px;width:22px;height:22px;flex:0 0 22px;border-radius:6px;background:var(--raise2);border:1px solid var(--border);color:var(--text2);display:grid;place-items:center;margin-top:1px;}
+  .ch li.sel{border-color:var(--accent);background:var(--accent-bg);} .ch li.sel .k{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .ch li.correct{border-color:var(--ok-bd);background:var(--ok-bg);} .ch li.correct .k{background:var(--ok);color:#fff;border-color:var(--ok);}
+  .ch li.incorrect{border-color:var(--no-bd);background:var(--no-bg);} .ch li.incorrect .k{background:var(--no);color:#fff;border-color:var(--no);}
+  .demo .act{display:flex;align-items:center;justify-content:space-between;margin-top:18px;}
+  .demo .kh{font-family:var(--mono);font-size:11px;color:var(--text3);}
+  .demo .kh kbd{border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--text2);}
+  .sub{font-size:13.5px;font-weight:600;border:none;border-radius:8px;padding:9px 18px;cursor:pointer;background:var(--accent);color:#fff;transition:background .12s;}
+  .sub:disabled{opacity:.4;cursor:not-allowed;}
+  .demoexp{display:none;margin-top:18px;border-top:1px solid var(--border);padding-top:16px;}
+  .demoexp.show{display:block;}
+  .verdict{font-family:var(--mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;margin-bottom:10px;}
+  .verdict.ok{color:var(--ok);} .verdict.no{color:var(--no);}
+  .demoexp p{font-size:14px;color:var(--text2);line-height:1.6;margin:0 0 8px;}
+  .demoexp .tk{background:var(--raise);border:1px solid var(--border);border-radius:9px;padding:12px 14px;font-size:13px;color:var(--text2);margin-top:12px;}
+  .demoexp .tk b{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:4px;color:var(--accent);}
+  .demoexp .more{margin-top:16px;}
+
+  /* concept breadcrumb */
+  .flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:22px;font-family:var(--mono);font-size:13px;}
+  .flow .node{border:1px solid var(--border);border-radius:8px;padding:9px 13px;background:var(--panel);color:var(--text2);}
+  .flow .node.hl{border-color:var(--accent);color:var(--text);background:var(--accent-bg);}
+  .flow .sepx{color:var(--text3);}
+
+  /* features */
+  .feat{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:26px;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--border);}
+  .feat .f{background:var(--panel);padding:22px 24px;}
+  .feat .f .ft{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+  .feat .f h3{font-size:16px;font-weight:600;margin:0 0 6px;}
+  .feat .f p{font-size:14px;color:var(--text2);margin:0;line-height:1.55;}
+
+  /* support + footer */
+  .support{border-top:1px solid var(--border);padding:48px 0;text-align:center;}
+  .support h2{font-size:24px;font-weight:600;letter-spacing:-.02em;margin:0 0 10px;}
+  .support p{color:var(--text2);max-width:52ch;margin:0 auto 22px;}
+  .footer{border-top:1px solid var(--border);padding:28px 0 60px;font-family:var(--mono);font-size:11.5px;color:var(--text3);line-height:1.8;}
+  .footer b{color:var(--text2);}
+  .footer .row{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .footer a{color:var(--text2);}
+  .footer a:hover{color:var(--accent);}
+
+  @media (max-width:680px){.feat{grid-template-columns:1fr}.hero{padding:64px 0 30px}.nlink.hideable{display:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="wrap">
+  <div class="brand"><span class="m">M</span><span class="n">Open MCAT</span></div>
+  <div class="r">
+    <a class="nlink hideable" href="app.html">Question bank</a>
+    <a class="nlink hideable" href="app.html">Schedules</a>
+    <a class="nlink hideable" href="app.html">Anki</a>
+    <button class="iconbtn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme"></button>
+    <a class="cta" href="app.html">Open app</a>
+  </div>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <span class="ey">Free &amp; open · original questions</span>
+  <h1>The MCAT, one <span class="g">testable idea</span> at a time.</h1>
+  <p>A free, keyboard-first question bank with original, application-style questions and a full rationale for every choice — filed by AAMC content category, built for focused review, not cramming.</p>
+  <div class="btns">
+    <a class="btn primary" href="app.html">Open the question bank →</a>
+    <a class="btn ghost" href="#try">Try a question</a>
+  </div>
+  <div class="meta"><span>⌘ Keyboard-first</span><span>◒ Dark mode by default</span><span>✓ 100% free</span></div>
+</div></header>
+
+<section class="sec" id="try"><div class="wrap">
+  <div class="lbl">See it in one question</div>
+  <h2>Every question earns its explanation.</h2>
+  <p class="lead">Not just an answer key — a rationale for why each choice is right or wrong, plus the one rule worth banking. Answer this one:</p>
+  <div class="demo">
+    <div class="dhead"><span class="code">6A</span><span class="cat">Sensory processing · Visual depth cues</span><span class="tag">Monocular vs. binocular</span></div>
+    <p class="stem">A patient sustains an injury causing complete, permanent loss of vision in the right eye; the left eye is normal. Which depth cue is the patient now <b>unable</b> to use?</p>
+    <ul class="ch" id="ch">
+      <li data-x="0" onclick="pick(0)"><span class="k">A</span><span>Interposition</span></li>
+      <li data-x="1" onclick="pick(1)"><span class="k">B</span><span>Retinal (binocular) disparity</span></li>
+      <li data-x="2" onclick="pick(2)"><span class="k">C</span><span>Relative size</span></li>
+      <li data-x="3" onclick="pick(3)"><span class="k">D</span><span>Motion parallax</span></li>
+    </ul>
+    <div class="act"><span class="kh"><kbd>A</kbd>–<kbd>D</kbd> to answer</span><button class="sub" id="sub" disabled onclick="reveal()">Submit</button></div>
+    <div class="demoexp" id="dexp">
+      <div class="verdict ok" id="verd"></div>
+      <p>Retinal disparity is a <b>binocular</b> cue — the brain compares the two slightly different retinal images to judge depth. With one eye there's no second image, so it's lost. Interposition, relative size, and motion parallax are all <b>monocular</b> and survive with one eye.</p>
+      <div class="tk"><b>Bank this</b>Only two cues are binocular: retinal disparity and convergence. A one-eyed patient loses exactly those two.</div>
+      <div class="more"><a class="btn primary" href="app.html">Open the full question bank →</a></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="sec"><div class="wrap">
+  <div class="lbl">The idea</div>
+  <h2>Organized by testable idea — the grain size that actually helps.</h2>
+  <p class="lead">"Weak at Psych/Soc" is too vague to fix. "Shaky on visual depth cues" is a studiable, seal-able unit. Open MCAT files every quiz at that level, mapped to the official AAMC hierarchy, so a wrong answer points you at exactly what to drill.</p>
+  <div class="flow">
+    <span class="node">Section</span><span class="sepx">›</span>
+    <span class="node">Content category</span><span class="sepx">›</span>
+    <span class="node hl">Testable idea</span><span class="sepx">›</span>
+    <span class="node">Quiz</span>
+  </div>
+</div></section>
+
+<section class="sec"><div class="wrap">
+  <div class="lbl">Built for studying</div>
+  <h2>A workspace, not a worksheet.</h2>
+  <div class="feat">
+    <div class="f"><div class="ft">Keyboard-first</div><h3>Move at the speed you think</h3><p>Answer with A–D, submit and advance with Enter, jump to search with “/”. Built for power users.</p></div>
+    <div class="f"><div class="ft">Progress</div><h3>Mastery &amp; streaks</h3><p>Per-idea mastery percentages and a daily streak, saved on your device — you always know what's solid.</p></div>
+    <div class="f"><div class="ft">Dark mode</div><h3>Made for late nights</h3><p>An excellent dark theme by default, near-monochrome, low glare — color reserved for right, wrong, and progress.</p></div>
+    <div class="f"><div class="ft">Original &amp; free</div><h3>No paywall, ever</h3><p>Every question is written from scratch to mirror MCAT reasoning. Free to use, free to keep — no account required.</p></div>
+  </div>
+</div></section>
+
+<section class="support"><div class="wrap">
+  <h2>Free, and staying free.</h2>
+  <p>If Open MCAT helped your studying, you can leave a small tip to support new question sets. No pressure — the whole thing is yours either way.</p>
+  <a class="btn ghost" id="tip" href="#" target="_blank" rel="noopener" style="border-color:var(--border2)">♥ Leave a tip</a>
+</div></section>
+
+<footer class="footer"><div class="wrap"><div class="row">
+  <span>Every question is <b>original</b> — never reproduced from a commercial bank. Pair with AAMC &amp; UWorld for ground-truth practice.</span>
+  <span><a href="app.html">Open app</a> · Independent, not affiliated with the AAMC</span>
+</div></div></footer>
+
+<script>
+const DONATE_URL="https://ko-fi.com/makenzimcdermott";
+const store={get(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+function theme(){return store.get('omcat_theme')||'dark';}
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);store.set('omcat_theme',t);
+  document.getElementById('themeBtn').innerHTML=t==='dark'
+    ?'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>'
+    :'<svg viewBox="0 0 24 24"><path d="M21 12.8A8 8 0 1111 3a6.5 6.5 0 0010 9.8z"/></svg>';}
+function toggleTheme(){setTheme(theme()==='dark'?'light':'dark');}
+window.toggleTheme=toggleTheme;setTheme(theme());
+document.getElementById('tip').setAttribute('href',DONATE_URL);
+
+/* live sample */
+let picked=null,locked=false;const ANS=1;
+function pick(x){if(locked)return;picked=x;[...document.querySelectorAll('#ch li')].forEach(l=>l.classList.toggle('sel',+l.dataset.x===x));document.getElementById('sub').disabled=false;}
+function reveal(){if(picked===null||locked)return;locked=true;const right=picked===ANS;
+  document.querySelectorAll('#ch li').forEach(l=>{const x=+l.dataset.x;l.classList.remove('sel');if(x===ANS)l.classList.add('correct');else if(x===picked)l.classList.add('incorrect');});
+  const v=document.getElementById('verd');v.className='verdict '+(right?'ok':'no');v.textContent=right?'✓ Correct':'✗ Incorrect · answer B';
+  document.getElementById('dexp').classList.add('show');document.getElementById('sub').style.display='none';}
+window.pick=pick;window.reveal=reveal;
+document.addEventListener('keydown',e=>{const k=e.key.toLowerCase();
+  if(!locked&&['a','b','c','d'].includes(k)){pick('abcd'.indexOf(k));}
+  else if(!locked&&e.key==='Enter'&&picked!==null){reveal();}});
+</script>
+</body>
+</html>

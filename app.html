@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open MCAT — question bank</title>
+<style>
+  :root{
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  html[data-theme="dark"]{
+    --bg:#0a0f17; --panel:#0d131d; --raise:#141d2a; --raise2:#1a2534;
+    --border:#1b2634; --border2:#26323f;
+    --text:#e9edf3; --text2:#93a1b6; --text3:#5c6b80;
+    --accent:#5182ff; --accent2:#3a5fbf; --accent-bg:rgba(81,130,255,.13);
+    --ok:#43b581; --ok-bg:rgba(67,181,129,.13); --ok-bd:rgba(67,181,129,.4);
+    --no:#e5645f; --no-bg:rgba(229,100,95,.13); --no-bd:rgba(229,100,95,.4);
+    --track:#1b2634; --shadow:0 8px 30px rgba(0,0,0,.4);
+  }
+  html[data-theme="light"]{
+    --bg:#ffffff; --panel:#f7f9fc; --raise:#eef2f8; --raise2:#e6ecf4;
+    --border:#e4e9f1; --border2:#d7deea;
+    --text:#0e1725; --text2:#53617a; --text3:#8592a6;
+    --accent:#2f5fe0; --accent2:#2f5fe0; --accent-bg:rgba(47,95,224,.08);
+    --ok:#1a9d68; --ok-bg:rgba(26,157,104,.09); --ok-bd:rgba(26,157,104,.35);
+    --no:#d6483f; --no-bg:rgba(214,72,63,.08); --no-bd:rgba(214,72,63,.35);
+    --track:#e6ecf4; --shadow:0 10px 34px rgba(20,40,70,.12);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;
+    line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  ::selection{background:var(--accent-bg);}
+  button{font-family:inherit;}
+  .app{display:grid;grid-template-columns:264px 1fr;height:100vh;overflow:hidden;}
+
+  /* ---------- sidebar ---------- */
+  .side{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;
+    overflow:hidden;}
+  .side .brand{display:flex;align-items:center;gap:9px;padding:16px 16px 12px;cursor:pointer;}
+  .side .brand .m{width:24px;height:24px;border-radius:6px;background:var(--accent);color:#fff;
+    display:grid;place-items:center;font-weight:700;font-size:13px;}
+  .side .brand .n{font-weight:600;font-size:15px;letter-spacing:-.01em;}
+  .search{margin:2px 12px 10px;position:relative;}
+  .search input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+    color:var(--text);font-size:13px;padding:8px 10px 8px 30px;outline:none;transition:border-color .12s;}
+  .search input:focus{border-color:var(--accent);}
+  .search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;
+    fill:none;stroke:var(--text3);stroke-width:2;}
+  .search .kbd{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-family:var(--mono);
+    font-size:10px;color:var(--text3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;}
+
+  .navscroll{flex:1;overflow-y:auto;padding:4px 8px 8px;}
+  .navlabel{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--text3);padding:12px 8px 6px;}
+  .grp{margin-bottom:2px;}
+  .grphead{display:flex;align-items:center;gap:7px;width:100%;background:none;border:none;color:var(--text2);
+    font-size:12.5px;font-weight:600;padding:6px 8px;border-radius:6px;cursor:pointer;text-align:left;}
+  .grphead:hover{background:var(--raise);color:var(--text);}
+  .grphead .car{width:9px;height:9px;fill:none;stroke:var(--text3);stroke-width:2;transition:transform .12s;}
+  .grphead.open .car{transform:rotate(90deg);}
+  .grphead .sc{font-family:var(--mono);font-size:10px;color:var(--text3);font-weight:500;}
+  .grphead .ct{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text3);}
+  .items{display:none;padding:2px 0 4px 6px;}
+  .items.open{display:block;}
+  .navitem{display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;color:var(--text2);
+    font-size:13px;padding:6px 8px 6px 16px;border-radius:6px;cursor:pointer;text-align:left;position:relative;}
+  .navitem:hover{background:var(--raise);color:var(--text);}
+  .navitem.active{background:var(--accent-bg);color:var(--text);}
+  .navitem.active::before{content:"";position:absolute;left:5px;top:8px;bottom:8px;width:2px;
+    background:var(--accent);border-radius:2px;}
+  .navitem .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .navitem .mb{width:26px;height:3px;background:var(--track);border-radius:2px;overflow:hidden;flex:0 0 26px;}
+  .navitem .mb i{display:block;height:100%;background:var(--accent);border-radius:2px;}
+  .navitem.done .mb i{background:var(--ok);}
+  .navempty{font-size:12px;color:var(--text3);padding:5px 8px 5px 16px;font-style:italic;}
+
+  .side .foot{border-top:1px solid var(--border);padding:8px;}
+  .footlink{display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;color:var(--text2);
+    font-size:13px;padding:7px 8px;border-radius:6px;cursor:pointer;text-align:left;text-decoration:none;}
+  .footlink:hover{background:var(--raise);color:var(--text);}
+  .footlink.active{color:var(--text);background:var(--raise);}
+  .footlink svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;}
+  .statline{display:flex;gap:14px;padding:9px 10px 4px;font-family:var(--mono);font-size:11px;color:var(--text3);}
+  .statline b{color:var(--text2);font-weight:600;}
+
+  /* ---------- main ---------- */
+  .main{overflow-y:auto;position:relative;}
+  .topbar{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;
+    justify-content:space-between;padding:0 22px;height:52px;gap:14px;}
+  .topbar .crumb{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:7px;}
+  .topbar .crumb b{color:var(--text);font-weight:600;}
+  .topbar .crumb button{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;padding:0;}
+  .topbar .crumb button:hover{color:var(--accent);}
+  .topbar .tools{display:flex;align-items:center;gap:6px;}
+  .iconbtn{width:32px;height:32px;border-radius:7px;border:1px solid var(--border);background:var(--panel);
+    color:var(--text2);display:grid;place-items:center;cursor:pointer;transition:all .12s;}
+  .iconbtn:hover{color:var(--text);border-color:var(--border2);background:var(--raise);}
+  .iconbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;}
+  .tipbtn{font-size:12.5px;color:var(--text2);border:1px solid var(--border);background:var(--panel);
+    border-radius:7px;padding:6px 11px;cursor:pointer;text-decoration:none;transition:all .12s;display:inline-flex;align-items:center;gap:6px;}
+  .tipbtn:hover{color:var(--text);border-color:var(--border2);}
+
+  .pane{padding:24px 26px 60px;max-width:920px;}
+  .pane.narrow{max-width:760px;}
+
+  /* list / table */
+  .h-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:6px 0 4px;}
+  .h-row h1{font-size:21px;font-weight:600;letter-spacing:-.02em;margin:0;}
+  .h-row .sub{font-size:12.5px;color:var(--text3);font-family:var(--mono);}
+  .tbl{width:100%;border-collapse:collapse;margin-top:14px;}
+  .tbl thead th{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--text3);font-weight:600;text-align:left;padding:0 12px 8px;border-bottom:1px solid var(--border);}
+  .tbl thead th.r{text-align:right;}
+  .tbl tbody tr{cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s;}
+  .tbl tbody tr:hover{background:var(--raise);}
+  .tbl tbody tr.hi{background:var(--accent-bg);}
+  .tbl td{padding:11px 12px;vertical-align:middle;}
+  .tbl .code{font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--raise2);
+    border:1px solid var(--border);border-radius:5px;padding:2px 6px;white-space:nowrap;}
+  .tbl .idea{font-size:14px;font-weight:550;color:var(--text);}
+  .tbl .catn{font-size:12px;color:var(--text3);margin-top:1px;}
+  .tbl .qn{font-family:var(--mono);font-size:12px;color:var(--text2);text-align:right;white-space:nowrap;}
+  .tbl .mastery{display:flex;align-items:center;gap:9px;justify-content:flex-end;min-width:120px;}
+  .tbl .mastery .mt{width:64px;height:5px;background:var(--track);border-radius:3px;overflow:hidden;}
+  .tbl .mastery .mt i{display:block;height:100%;background:var(--accent);border-radius:3px;}
+  .tbl .mastery.full .mt i{background:var(--ok);}
+  .tbl .mastery .pc{font-family:var(--mono);font-size:11.5px;color:var(--text2);width:34px;text-align:right;}
+  .tbl .arw{color:var(--text3);}
+  .tbl tbody tr:hover .arw{color:var(--accent);}
+
+  /* quiz */
+  .qmeta{display:flex;align-items:center;gap:10px;margin:2px 0 4px;}
+  .qmeta .code{font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--raise2);
+    border:1px solid var(--border);border-radius:5px;padding:2px 7px;}
+  .qmeta .cat{font-size:12px;color:var(--text3);}
+  .qmeta .prog{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--text2);}
+  .qmeta .prog b{color:var(--text);}
+  .qtitle{font-size:20px;font-weight:600;letter-spacing:-.02em;margin:2px 0 14px;}
+  .pbar{height:4px;background:var(--track);border-radius:3px;overflow:hidden;margin-bottom:24px;}
+  .pbar i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .3s ease;}
+  .qtag{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;}
+  .stem{font-size:16.5px;line-height:1.6;color:var(--text);margin:0 0 22px;}
+  .stem b{color:var(--text);font-weight:650;}
+  ul.choices{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .choice{display:flex;gap:13px;align-items:flex-start;border:1px solid var(--border);border-radius:9px;
+    padding:13px 15px;cursor:pointer;background:var(--panel);transition:border-color .1s,background .1s;font-size:14.5px;}
+  .choice:hover{border-color:var(--accent2);background:var(--raise);}
+  .choice .k{font-family:var(--mono);font-weight:600;font-size:12px;width:23px;height:23px;flex:0 0 23px;
+    border-radius:6px;background:var(--raise2);border:1px solid var(--border);color:var(--text2);
+    display:grid;place-items:center;margin-top:1px;}
+  .choice.sel{border-color:var(--accent);background:var(--accent-bg);}
+  .choice.sel .k{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .choice.correct{border-color:var(--ok-bd);background:var(--ok-bg);}
+  .choice.correct .k{background:var(--ok);color:#fff;border-color:var(--ok);}
+  .choice.incorrect{border-color:var(--no-bd);background:var(--no-bg);}
+  .choice.incorrect .k{background:var(--no);color:#fff;border-color:var(--no);}
+  .choice.locked{cursor:default;}
+  .actionbar{display:flex;align-items:center;justify-content:space-between;margin-top:20px;}
+  .khint{font-family:var(--mono);font-size:11px;color:var(--text3);display:flex;gap:12px;}
+  .khint kbd{border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--text2);background:var(--panel);}
+  .btn{font-weight:600;font-size:13.5px;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;
+    background:var(--accent);color:#fff;transition:background .12s,opacity .12s;}
+  .btn:hover{background:var(--accent2);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn.ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}
+  .btn.ghost:hover{color:var(--text);border-color:var(--border2);background:var(--raise);}
+
+  .exp{margin-top:26px;border-top:1px solid var(--border);padding-top:20px;display:none;}
+  .exp.show{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .verdict{font-family:var(--mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;margin-bottom:12px;}
+  .verdict.ok{color:var(--ok);} .verdict.no{color:var(--no);}
+  .exp p{margin:0 0 10px;font-size:14.5px;color:var(--text2);line-height:1.6;}
+  .exp h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);margin:18px 0 9px;}
+  .why{font-size:13.5px;color:var(--text2);margin:0 0 8px;padding-left:16px;position:relative;line-height:1.55;}
+  .why b{color:var(--text);font-family:var(--mono);font-size:12px;}
+  .why::before{content:"";position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:2px;background:var(--border2);}
+  .why.r::before{background:var(--ok);} .why.w::before{background:var(--no);}
+  .takeaway{background:var(--raise);border:1px solid var(--border);border-radius:9px;padding:13px 15px;
+    font-size:13.5px;color:var(--text2);margin-top:16px;line-height:1.55;}
+  .takeaway b{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+    display:block;margin-bottom:5px;color:var(--accent);}
+
+  .result{padding:20px 0;}
+  .result .score{display:flex;align-items:baseline;gap:14px;}
+  .result .score .big{font-size:46px;font-weight:600;letter-spacing:-.02em;}
+  .result .score .pc{font-family:var(--mono);font-size:14px;color:var(--text2);}
+  .result p{color:var(--text2);max-width:56ch;font-size:14px;margin:12px 0 0;line-height:1.6;}
+  .rev{margin-top:22px;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .rev .rr{display:flex;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);
+    font-size:13px;font-family:var(--mono);color:var(--text2);}
+  .rev .rr:last-child{border-bottom:none;}
+  .rev .mk{font-weight:700;width:14px;} .mk.ok{color:var(--ok);} .mk.no{color:var(--no);}
+  .result .actionbar{margin-top:22px;justify-content:flex-start;gap:10px;}
+
+  /* schedules + anki content */
+  .tabs{display:flex;gap:2px;background:var(--raise);border:1px solid var(--border);border-radius:9px;
+    padding:3px;width:fit-content;margin:14px 0 22px;}
+  .tab{font-size:13px;font-weight:500;background:none;border:none;padding:7px 14px;border-radius:6px;
+    cursor:pointer;color:var(--text2);transition:all .1s;}
+  .tab:hover{color:var(--text);}
+  .tab.on{background:var(--bg);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.15);}
+  .schmeta{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:8px;}
+  .schmeta div{display:flex;flex-direction:column;}
+  .schmeta b{font-size:17px;font-weight:600;}
+  .schmeta span{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:3px;}
+  .schwho{font-size:14.5px;color:var(--text2);margin:6px 0 18px;max-width:62ch;line-height:1.55;}
+  .ctbl{width:100%;border-collapse:collapse;margin:6px 0 22px;font-size:14px;}
+  .ctbl th,.ctbl td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
+  .ctbl th{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);font-weight:600;}
+  .ctbl td b{color:var(--text);} .ctbl .sp{font-family:var(--mono);font-size:12px;color:var(--accent);}
+  .cnote{background:var(--raise);border:1px solid var(--border);border-left:2px solid var(--accent);
+    border-radius:8px;padding:13px 16px;font-size:13.5px;color:var(--text2);margin:16px 0;line-height:1.55;}
+  .cnote b{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:5px;color:var(--accent);}
+  .deckrow{border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:10px;background:var(--panel);}
+  .deckrow .dh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .deckrow h3{font-size:16px;font-weight:600;margin:0;}
+  .deckrow .tl{font-family:var(--mono);font-size:11px;color:var(--text3);}
+  .deckrow p{font-size:13.5px;color:var(--text2);margin:8px 0 10px;line-height:1.55;}
+  .deckrow .best{font-family:var(--mono);font-size:11px;color:var(--text3);}
+  .deckrow .best b{color:var(--text2);}
+  .deckrow a.dl{display:inline-block;font-size:12.5px;font-weight:600;color:var(--accent);text-decoration:none;margin-top:10px;}
+  .deckrow a.dl:hover{text-decoration:underline;}
+  .footnote{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:26px;line-height:1.7;border-top:1px solid var(--border);padding-top:16px;}
+  .footnote b{color:var(--text2);}
+  .reset{background:none;border:none;color:var(--text3);font-family:var(--mono);font-size:11px;cursor:pointer;text-decoration:underline;padding:0;}
+
+  .menubtn{display:none;}
+  @media (max-width:760px){
+    .app{grid-template-columns:1fr;}
+    .side{position:fixed;left:0;top:0;bottom:0;width:264px;z-index:30;transform:translateX(-100%);transition:transform .2s;box-shadow:var(--shadow);}
+    .app.navopen .side{transform:none;}
+    .menubtn{display:grid;}
+    .scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:25;}
+    .app.navopen .scrim{display:block;}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app" id="shell">
+  <div class="scrim" onclick="toggleNav(false)"></div>
+  <aside class="side" id="side"></aside>
+  <main class="main"><div id="top"></div><div id="main"></div></main>
+</div>
+
+<script>
+const DONATE_URL="https://ko-fi.com/makenzimcdermott";
+
+/* ==================== DATA (add a quiz = append one object; keep it ORIGINAL) ==================== */
+const BANK=[
+{id:"ps-6a-visual-cues",section:"Psychological, Social & Biological Foundations of Behavior",sectionCode:"P/S",category:"Sensory processing",categoryCode:"6A",idea:"Visual depth cues",
+ questions:[
+  {tag:"Monocular vs. binocular · applied",stem:`A patient sustains a penetrating injury resulting in complete, permanent loss of vision in the right eye; the left eye remains normal. Months later the patient reports trouble with certain depth judgments. Which depth cue is the patient now <b>unable</b> to use?`,choices:["Interposition","Retinal (binocular) disparity","Relative size","Motion parallax"],answer:1,rationale:"Retinal disparity is a <b>binocular</b> cue: the brain compares the two slightly different retinal images to compute depth. With one eye there is no second image, so it is lost. Every other option is <b>monocular</b>.",why:["Interposition is monocular — one eye suffices to see a near object occlude a far one.","Correct. Disparity needs two eyes producing two images.","Relative size is monocular.","Motion parallax is monocular — differential sweep of near vs. far objects during self-motion."],takeaway:"Only two cues are binocular: retinal disparity and convergence. A one-eyed patient loses exactly those two."},
+  {tag:"Oculomotor cues · the classic trap",stem:`As an object moves toward a person's face, both eyes rotate inward toward the nose, and the brain reads the muscular rotation to gauge distance. This cue is best classified as:`,choices:["Accommodation, a monocular cue","Convergence, a binocular cue","Retinal disparity, a binocular cue","Motion parallax, a monocular cue"],answer:1,rationale:"<b>Convergence</b> is the inward rotation of both eyes to fixate a near object; because it depends on both eyes it is binocular. The distractor to beat is accommodation — the other oculomotor cue — which is monocular.",why:["Accommodation is oculomotor but is the ciliary muscle changing <b>lens shape</b> in one eye — monocular, and not the rotation described.","Correct. Both eyes rotating inward = binocular oculomotor cue.","Disparity is binocular but refers to the <b>difference between the two images</b>, not muscular rotation.","Motion parallax is object motion during observer movement, not eye rotation, and is monocular."],takeaway:"Accommodation = lens shape, MONOcular; convergence = eyes rotating inward, BINocular. Both signal 'near.'"},
+  {tag:"Motion parallax · scenario",stem:`A passenger gazing out the side window of a moving train sees fence posts beside the track streak past rapidly, while distant mountains drift by slowly. The cue producing this depth impression is:`,choices:["Linear perspective","Texture gradient","Motion parallax","Convergence"],answer:2,rationale:"<b>Motion parallax</b>: objects at different distances appear to move at different speeds as the observer moves — near fast, far slow. Monocular, and it requires observer motion.",why:["Linear perspective is apparent convergence of parallel lines in a static scene.","Texture gradient is a static change in surface grain with distance.","Correct. Differential apparent speed during self-motion.","Convergence is an oculomotor cue, unrelated to external object motion."],takeaway:"Observer moving + near things moving faster than far things = motion parallax, the one monocular cue that needs motion."},
+  {tag:"Pictorial cues · what a flat canvas can't do",stem:`A painter wants a convincing illusion of depth on a flat canvas. Which cue is the painter fundamentally <b>unable</b> to employ?`,choices:["Linear perspective","Interposition","Retinal disparity","Relative size"],answer:2,rationale:"A flat canvas presents essentially the <b>same image to both eyes</b>, so it cannot generate retinal disparity (which needs a real 3-D scene giving each eye a different image). The others are pictorial/monocular cues.",why:["Linear perspective is a pictorial cue.","Interposition is a pictorial cue.","Correct. Disparity needs a true 3-D scene; a flat image can't produce it.","Relative size is a pictorial cue."],takeaway:"'Pictorial cues' ARE the monocular cues — those that survive on a 2-D surface. Binocular cues are exactly what a flat image loses."},
+  {tag:"Texture gradient vs. relative size",stem:`At the edge of a cobblestone plaza, an observer sees stones look large and distinct near their feet but progressively smaller, finer, and denser toward the far side. The <b>primary</b> monocular cue here is:`,choices:["Relative size","Texture gradient","Interposition","Relative height"],answer:1,rationale:"A continuous surface whose <b>texture becomes finer and denser with distance</b> is a texture gradient. The cue is the graded change in one uniform surface's grain, not a comparison of separate objects.",why:["Relative size compares <b>separate objects of known size</b>; here it's one continuous surface.","Correct. Progressive fining of a surface = texture gradient.","Interposition needs one object <b>overlapping</b> another; nothing is occluded.","Relative height concerns vertical position near the horizon, not texture density."],takeaway:"Texture gradient = one continuous surface getting finer with distance. Relative size = separate known objects imaged smaller."},
+  {tag:"Interposition · cue + its limit",stem:`In a photograph, a car partially blocks a building behind it, and the viewer judges the car to be closer. Which cue is operating, and what is its key limitation vs. binocular cues?`,choices:["Interposition; it yields only relative depth order, not absolute distance","Retinal disparity; it yields precise absolute distance","Linear perspective; it requires input from both eyes","Accommodation; it operates only for objects several meters away"],answer:0,rationale:"<b>Interposition</b>: an occluding object is seen as nearer. It reliably tells you the <b>order</b> of objects but not how far apart they are — relative, not absolute, depth. Monocular.",why:["Correct. Overlap establishes near/far ordering only.","The cue described is overlap, not disparity; disparity is binocular.","Linear perspective is monocular and isn't described here.","Accommodation is monocular and works for <b>near</b> objects, opposite of the claim."],takeaway:"Interposition ranks objects front-to-back without quantifying the gap. Disparity is prized because it approaches absolute depth up close."}
+ ]},
+{id:"ps-9b-social-stratification",section:"Psychological, Social & Biological Foundations of Behavior",sectionCode:"P/S",category:"Social stratification",categoryCode:"9B",idea:"Social stratification & mobility",
+ questions:[
+  {tag:"Ascribed vs. achieved status",stem:`A sociologist studies two attributes of a person: the caste they were born into, and the profession they later entered through training. These are best described, respectively, as:`,choices:["Both ascribed statuses","An ascribed status and an achieved status","An achieved status and an ascribed status","Both achieved statuses"],answer:1,rationale:"An <b>ascribed status</b> is assigned at birth or involuntarily (caste, sex, race). An <b>achieved status</b> is earned through one's own actions (a profession entered via training).",why:["Caste is ascribed, but a trained profession is earned.","Correct. Caste = ascribed; trained profession = achieved.","Reversed.","Caste is not achieved; it's assigned at birth."],takeaway:"Ascribed = given to you (birth, involuntary). Achieved = earned. Occupation and education are the classic achieved statuses."},
+  {tag:"Caste vs. class systems",stem:`A society allows essentially no movement between strata; position is fixed at birth and endogamy is enforced. Compared with a class system, this caste system is best characterized as:`,choices:["An open system with high social mobility","A closed system with little to no social mobility","A meritocracy based on achieved status","A system defined primarily by economic capital"],answer:1,rationale:"A <b>caste system is closed</b>: strata are fixed at birth, mobility is essentially impossible, membership is ascribed. A class system is open, permitting mobility partly on achieved status.",why:["Open, mobile systems are class systems.","Correct. Caste = closed, ascribed, minimal mobility.","Meritocracy rewards achieved status; caste is ascribed.","Caste is defined by birth-ascribed rank, not primarily economic capital."],takeaway:"Caste = closed/ascribed/no mobility. Class = open/allows mobility. 'Closed vs. open' is the core contrast."},
+  {tag:"Forms of capital · Bourdieu",stem:`A first-generation student is comfortable with academic norms, formal speech, and cultural references that ease their way through elite institutions, despite modest family income. This asset is best labeled:`,choices:["Economic capital","Cultural capital","Social capital","Human capital"],answer:1,rationale:"<b>Cultural capital</b> is the non-financial social assets — education, tastes, speech, cultural knowledge — that promote mobility and ease within institutions. Distinct from money (economic) and networks (social).",why:["Economic capital is financial resources; the stem specifies modest income.","Correct. Norms, speech, cultural fluency = cultural capital.","Social capital is the value of one's <b>networks</b>, not cultural fluency.","Human capital (skills for labor markets) is close, but the stem describes cultural fluency — Bourdieu's cultural capital."],takeaway:"Bourdieu: economic = money; cultural = knowledge/tastes; social = networks. 'Fits in at elite institutions' → cultural capital."},
+  {tag:"Types of mobility",stem:`A woman born to working-class parents becomes a physician. Over her own career she is later promoted from resident to department chief. These two changes illustrate, respectively:`,choices:["Intragenerational then intergenerational mobility","Intergenerational then intragenerational mobility","Horizontal then vertical mobility","Structural then exchange mobility"],answer:1,rationale:"Working-class parents to physician is <b>intergenerational</b> mobility (relative to the prior generation). Resident to chief within her own working life is <b>intragenerational</b>.",why:["Reversed.","Correct. Between generations first, then within her own lifetime.","Both moves are vertical (upward).","Structural mobility refers to whole groups moving due to societal change."],takeaway:"Intergenerational = across generations (parent→child). Intragenerational = within one lifetime/career."},
+  {tag:"Structural mobility",stem:`During rapid industrialization, a large share of a nation's population moves from agricultural labor into factory and clerical jobs as the occupational structure shifts. This population-level upward movement is best termed:`,choices:["Individual meritocratic mobility","Structural mobility","Horizontal mobility","Downward mobility"],answer:1,rationale:"<b>Structural mobility</b> is movement of many people caused by changes in society's structure (industrialization creating new job categories), not individual effort.",why:["The stem describes a society-wide shift, not individual merit.","Correct. Economy-driven movement of many people.","Horizontal mobility is same-rank change; this is upward.","The movement is upward, not downward."],takeaway:"Structural mobility = society changes and moves whole groups. Contrast with individual mobility from personal effort."},
+  {tag:"Explaining persistent inequality",stem:`A theorist argues that schools transmit the dominant group's cultural capital, so children of advantaged families are rewarded for norms they already possess, quietly reproducing the class structure across generations. This reflects:`,choices:["The Davis–Moore (functionalist) view that stratification is beneficial","Social reproduction, a conflict-theory perspective","Meritocracy operating as intended","Symbolic interactionism at the societal level"],answer:1,rationale:"<b>Social reproduction</b> — associated with conflict theory and Bourdieu — holds that institutions like schools transmit advantage across generations, perpetuating inequality rather than rewarding pure merit.",why:["Davis–Moore argues stratification is functional; this stem critiques inequality.","Correct. Institutions reproducing class advantage = social reproduction.","The argument is that merit is NOT what's rewarded — it opposes meritocracy.","Symbolic interactionism is micro-level meaning-making, not macro reproduction."],takeaway:"Social reproduction = inequality perpetuated through institutions (esp. schools). Conflict-theory idea; contrast Davis–Moore."}
+ ]}
+];
+const SECTIONS=[
+ {code:"P/S",name:"Psychological, Social & Biological Foundations of Behavior"},
+ {code:"B/B",name:"Biological & Biochemical Foundations of Living Systems"},
+ {code:"C/P",name:"Chemical & Physical Foundations of Biological Systems"},
+ {code:"CARS",name:"Critical Analysis & Reasoning Skills"}
+];
+const SCHEDULES=[
+ {id:"3mo",label:"3 months",hours:"35–50 hrs/wk",who:"A full-time dedicated sprint — for when studying is essentially your job and prerequisite coursework is already done.",phases:[{sp:"Wks 1–5",ph:"Content",fo:"Cover every content area; build Anki daily; cold diagnostic in week 1. Start 1–2 CARS passages/day from day one."},{sp:"Wks 6–9",ph:"Application",fo:"UWorld blocks daily with 2–3× review time; keep an error log; begin AAMC Section Banks late. CARS ramps to 2–3/day."},{sp:"Wks 10–12",ph:"Full-lengths",fo:"1–2 AAMC full-lengths/week under real conditions, a full day reviewing each; taper the final 4–5 days."}],note:"The most common failure mode is burnout by week 8. Build one lighter day per week and protect sleep — it's a study tool, not a luxury."},
+ {id:"6mo",label:"6 months",hours:"15–22 hrs/wk",who:"The balanced plan — studying alongside a job or a light course load. The most common realistic timeline.",phases:[{sp:"Mo 1–3",ph:"Content",fo:"Work through content by section; build Anki as you go; daily CARS from month one. Diagnostic early to target weak areas."},{sp:"Mo 4–5",ph:"Application",fo:"UWorld + deep review becomes the core; error log every week; AAMC Section Banks in month 5. Keep CARS daily."},{sp:"Mo 6",ph:"Full-lengths",fo:"Weekly AAMC full-lengths with full-day reviews; targeted error-log topics; taper into test day."}],note:"With this much runway, don't rush into practice — but don't linger in content review past month 3 either. The score is built in the UWorld-and-review phase."},
+ {id:"12mo",label:"12 months",hours:"8–14 hrs/wk (rising)",who:"The long-runway, distributed plan — ideal if you're still finishing prerequisite coursework. The highest-ceiling path, because content compounds with your classes.",phases:[{sp:"Mo 1–8",ph:"Distributed content",fo:"Learn each subject the semester you take the class; build that subject's Anki as you go. Start daily CARS in month one and never stop."},{sp:"Mo 9–11",ph:"Application",fo:"Shift into dedicated-style practice: UWorld, AAMC Section Banks, error log. Content is already warm, so this phase does more work."},{sp:"Mo 12",ph:"Full-lengths",fo:"AAMC full-lengths spaced through the final weeks, full-day reviews, taper. Take the exam once scores stabilize at target."}],note:"This is the plan that best fits finishing prereqs. The lever is timing your Anki to the semester you're already living in the subject."},
+ {id:"cram",label:"Under 6 weeks",hours:"triage",who:"A compressed timeline. Honest framing: enough to sharpen an already-solid foundation, but not to build content from scratch or move a score dramatically.",phases:[{sp:"Wk 1",ph:"Triage",fo:"Diagnose ruthlessly. Hit only the highest-yield content: biochem, the P/S term deck, amino acids, key equations. Skip low-yield rabbit holes."},{sp:"Wks 2–4",ph:"Practice-first",fo:"UWorld and AAMC material over new content. Review is the work — 2–3× the block time. Fix recurring error-log patterns."},{sp:"Wks 5–6",ph:"Full-lengths",fo:"3–4 full-lengths with same-day reviews; taper the last few days. Prioritize stamina and pacing."}],note:"If your practice scores are far from target and content is shaky, the highest-value decision may be to reschedule. A delayed test with the right score beats an on-time one with the wrong score."}
+];
+const WIKI="https://www.reddit.com/r/AnkiMCAT/";
+const DECKS=[
+ {name:"MileDown",tl:"~2,900 cards · all sections",best:"efficient full-content review · strong B/B and C/P",desc:"The most widely used all-in-one deck. Concise, image-rich cloze cards in seven subdecks, built from the MileDown review sheets and the 300-page Khan Academy P/S doc. The default for most people, especially on a tighter timeline.",link:WIKI},
+ {name:"Mr. Pankow",tl:"~2,200 cards · Psych/Soc",best:"the P/S community favorite",desc:"The consensus best deck for P/S. Teaches concepts with real examples and applied nuance rather than bare definitions, organized around the Khan Academy / AAMC framework. If sociology is your gap, the highest-value deck to run.",link:WIKI},
+ {name:"JackSparrow2048",tl:"~5,900 cards · all sections",best:"reading-heavy learners with a long runway",desc:"A comprehensive, content-heavy deck of basic front/back cards with paragraph backs — made by a 527 scorer. Slower and denser than MileDown; great with months to spare. Also offers a separate CARS deck.",link:WIKI},
+ {name:"Ortho528",tl:"4,000+ cards · all sections",best:"comprehensive, from-scratch building",desc:"A very thorough from-scratch deck (creator scored 132 on all content sections), mixing cloze and image cards. Good if you're building content knowledge from the ground up.",link:WIKI},
+ {name:"AnKing MCAT",tl:"maintained on AnkiHub",best:"a continuously updated deck",desc:"An actively maintained community deck on AnkiHub. The latest version needs a paid AnkiHub subscription; an earlier version circulates via r/AnkiMCAT.",link:"https://www.ankihub.net/mcat-deck"},
+ {name:"Subject boosters",tl:"targeted single-topic decks",best:"patching one weak subject",desc:"Smaller decks for a single area: BioBenoni (a strong C/P pick), Tiramiwho's physics equations, hormone and periodic-table memory decks. Add on top of a main deck only where you have a specific weakness.",link:WIKI}
+];
+
+/* ==================== storage / progress ==================== */
+const store={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
+function getProgress(){return store.get('omcat_prog_v2')||{};}
+function saveProgress(id,score,total){const p=getProgress(),pr=p[id];if(!pr||score>pr.best)p[id]={best:score,total,ts:Date.now()};else p[id].total=total;store.set('omcat_prog_v2',p);}
+function mastery(id){const p=getProgress()[id];const total=(BANK.find(q=>q.id===id)||{}).questions.length||1;if(!p)return{best:0,total,pct:0,done:false};const pct=Math.round(p.best/total*100);return{best:p.best,total,pct,done:pct===100};}
+function getStreak(){return store.get('omcat_streak')||{count:0,last:null};}
+function bumpStreak(){const s=getStreak();const t=new Date().toDateString();if(s.last===t)return;const y=new Date(Date.now()-864e5).toDateString();s.count=(s.last===y)?s.count+1:1;s.last=t;store.set('omcat_streak',s);}
+function resetProgress(){if(confirm('Clear saved progress and streak on this device?')){store.del('omcat_prog_v2');store.del('omcat_streak');paint();}}
+window.resetProgress=resetProgress;
+
+/* theme */
+function getTheme(){return store.get('omcat_theme')||'dark';}
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);store.set('omcat_theme',t);}
+function toggleTheme(){setTheme(getTheme()==='dark'?'light':'dark');paint();}
+window.toggleTheme=toggleTheme;
+setTheme(getTheme());
+
+/* ==================== state / router ==================== */
+let state={view:'list',section:null,search:'',quiz:null,i:0,score:0,picked:null,locked:false,res:[],open:{"P/S":true}};
+function go(view,arg){
+  if(view==='quiz'){state.quiz=BANK.find(q=>q.id===arg);state.i=0;state.score=0;state.picked=null;state.locked=false;state.res=[];}
+  if(view==='list'&&arg!==undefined)state.section=arg;
+  state.view=view;
+  document.querySelector('.main').scrollTo(0,0);
+  toggleNav(false);
+  paint();
+}
+window.go=go;
+function toggleNav(o){const s=document.getElementById('shell');s.classList.toggle('navopen',o===undefined?!s.classList.contains('navopen'):o);}
+window.toggleNav=toggleNav;
+
+function paint(){renderSide();renderTop();renderMain();}
+
+/* ==================== sidebar ==================== */
+function ideasBySection(code){return BANK.filter(q=>q.sectionCode===code);}
+function renderSide(){
+  const prog=getProgress();const streak=getStreak();
+  const totalQ=BANK.reduce((s,q)=>s+q.questions.length,0);
+  const doneN=BANK.filter(q=>prog[q.id]).length;
+  const tree=SECTIONS.map(sec=>{
+    const ideas=ideasBySection(sec.code);const isOpen=!!state.open[sec.code];
+    return `<div class="grp">
+      <button class="grphead ${isOpen?'open':''}" onclick="toggleGrp('${sec.code}')">
+        <svg class="car" viewBox="0 0 10 10"><path d="M3 1l4 4-4 4"/></svg>
+        <span class="sc">${sec.code}</span><span>${sec.name.split(' ')[0]==='Psychological'?'Psych / Soc':sec.name.split('&')[0].trim()}</span>
+        <span class="ct">${ideas.length||'—'}</span>
+      </button>
+      <div class="items ${isOpen?'open':''}">
+        ${ideas.length?ideas.map(q=>{const m=mastery(q.id);const on=state.view==='quiz'&&state.quiz&&state.quiz.id===q.id;
+          return `<button class="navitem ${on?'active':''} ${m.done?'done':''}" onclick="go('quiz','${q.id}')">
+            <span class="nm">${q.idea}</span>
+            <span class="mb"><i style="width:${m.pct}%"></i></span></button>`;}).join(''):`<div class="navempty">No quizzes yet</div>`}
+      </div></div>`;}).join('');
+  document.getElementById('side').innerHTML=`
+    <div class="brand" onclick="go('list',null)"><span class="m">M</span><span class="n">Open MCAT</span></div>
+    <div class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <input id="search" placeholder="Search ideas" value="${state.search}" oninput="onSearch(this.value)">
+      <span class="kbd">/</span>
+    </div>
+    <div class="navscroll">
+      <div class="navlabel">Question bank</div>
+      ${tree}
+    </div>
+    <div class="foot">
+      <button class="footlink ${state.view==='sched'?'active':''}" onclick="go('sched')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Schedules</button>
+      <button class="footlink ${state.view==='anki'?'active':''}" onclick="go('anki')"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 4v16"/></svg>Anki decks</button>
+      <div class="statline"><span>Done <b>${doneN}/${BANK.length}</b></span><span>Streak <b>${streak.count}d</b></span></div>
+      ${doneN?`<div style="padding:2px 10px 6px"><button class="reset" onclick="resetProgress()">Reset progress</button></div>`:''}
+    </div>`;
+}
+window.toggleGrp=function(c){state.open[c]=!state.open[c];renderSide();};
+window.onSearch=function(v){state.search=v;if(state.view!=='list'){state.view='list';state.section=null;renderTop();}renderMain();
+  const el=document.getElementById('search');/* keep focus */ };
+
+/* ==================== top bar ==================== */
+function renderTop(){
+  let crumb='';
+  if(state.view==='list')crumb=`<b>Question bank</b>${state.section?` · ${state.section}`:''}`;
+  else if(state.view==='quiz')crumb=`<button onclick="go('list',null)">Question bank</button> › <b>${state.quiz.idea}</b>`;
+  else if(state.view==='results')crumb=`<button onclick="go('list',null)">Question bank</button> › <b>${state.quiz.idea}</b> · Results`;
+  else if(state.view==='sched')crumb=`<b>Study schedules</b>`;
+  else if(state.view==='anki')crumb=`<b>Anki decks</b>`;
+  const th=getTheme();
+  document.getElementById('top').innerHTML=`
+   <div class="topbar">
+     <div style="display:flex;align-items:center;gap:12px">
+       <button class="iconbtn menubtn" onclick="toggleNav()"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+       <div class="crumb">${crumb}</div>
+     </div>
+     <div class="tools">
+       <a class="tipbtn" href="${DONATE_URL}" target="_blank" rel="noopener">♥ Support</a>
+       <button class="iconbtn" onclick="toggleTheme()" title="Toggle theme">
+         ${th==='dark'?`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>`:`<svg viewBox="0 0 24 24"><path d="M21 12.8A8 8 0 1111 3a6.5 6.5 0 0010 9.8z"/></svg>`}
+       </button>
+     </div>
+   </div>`;
+}
+
+/* ==================== main: list ==================== */
+function renderMain(){
+  if(state.view==='list')return renderList();
+  if(state.view==='quiz')return renderQuiz();
+  if(state.view==='results')return renderResults();
+  if(state.view==='sched')return renderSchedules();
+  if(state.view==='anki')return renderAnki();
+}
+function renderList(){
+  const q=state.search.trim().toLowerCase();
+  let rows=BANK.filter(x=>!state.section||x.sectionCode===state.section)
+    .filter(x=>!q||x.idea.toLowerCase().includes(q)||x.category.toLowerCase().includes(q)||x.categoryCode.toLowerCase().includes(q));
+  const totalQ=rows.reduce((s,x)=>s+x.questions.length,0);
+  const body=rows.length?rows.map(x=>{const m=mastery(x.id);
+    return `<tr onclick="go('quiz','${x.id}')">
+      <td><span class="code">${x.sectionCode} · ${x.categoryCode}</span></td>
+      <td><div class="idea">${x.idea}</div><div class="catn">${x.category}</div></td>
+      <td class="qn">${x.questions.length} Q</td>
+      <td><div class="mastery ${m.done?'full':''}"><span class="mt"><i style="width:${m.pct}%"></i></span><span class="pc">${m.pct}%</span></div></td>
+      <td style="text-align:right"><span class="arw">›</span></td>
+    </tr>`;}).join(''):`<tr><td colspan="5" style="padding:26px 12px;color:var(--text3)">No ideas match “${state.search}”.</td></tr>`;
+  document.getElementById('main').innerHTML=`
+   <div class="pane">
+     <div class="h-row"><h1>Question bank</h1><span class="sub">${rows.length} ideas · ${totalQ} questions</span></div>
+     <table class="tbl">
+       <thead><tr><th style="width:96px">Ref</th><th>Testable idea</th><th class="r" style="width:70px">Count</th><th class="r" style="width:140px">Mastery</th><th></th></tr></thead>
+       <tbody>${body}</tbody>
+     </table>
+   </div>`;
+}
+
+/* ==================== main: quiz ==================== */
+function renderQuiz(){
+  const q=state.quiz,item=q.questions[state.i];state.picked=null;state.locked=false;
+  document.getElementById('main').innerHTML=`
+   <div class="pane narrow">
+     <div class="qmeta"><span class="code">${q.categoryCode}</span><span class="cat">${q.category}</span>
+       <span class="prog">Q <b>${state.i+1}</b> / ${q.questions.length} · Score <b>${state.score}</b></span></div>
+     <div class="qtitle">${q.idea}</div>
+     <div class="pbar"><i style="width:${state.i/q.questions.length*100}%"></i></div>
+     <div class="qtag">${item.tag}</div>
+     <div class="stem">${item.stem}</div>
+     <ul class="choices" id="choices">
+       ${item.choices.map((c,x)=>`<li class="choice" tabindex="0" role="button" data-x="${x}" onclick="selectIdx(${x})"><span class="k">${'ABCD'[x]}</span><span>${c}</span></li>`).join('')}
+     </ul>
+     <div class="actionbar">
+       <div class="khint"><span><kbd>A</kbd>–<kbd>D</kbd> select</span><span><kbd>⏎</kbd> submit</span><span><kbd>esc</kbd> back</span></div>
+       <button class="btn" id="submit" disabled onclick="doSubmit()">Submit</button>
+     </div>
+     <div class="exp" id="exp"></div>
+   </div>`;
+}
+window.selectIdx=function(x){if(state.locked)return;const cs=[...document.querySelectorAll('.choice')];if(x<0||x>=cs.length)return;
+  cs.forEach(c=>c.classList.remove('sel'));cs[x].classList.add('sel');state.picked=x;document.getElementById('submit').disabled=false;};
+window.doSubmit=function(){
+  if(state.picked===null||state.locked)return;state.locked=true;
+  const q=state.quiz,item=q.questions[state.i],correct=item.answer,right=state.picked===correct;
+  if(right)state.score++;state.res[state.i]=right;
+  document.querySelectorAll('.choice').forEach(c=>{const x=+c.dataset.x;c.classList.add('locked');c.classList.remove('sel');if(x===correct)c.classList.add('correct');else if(x===state.picked)c.classList.add('incorrect');});
+  const last=state.i===q.questions.length-1;
+  document.getElementById('exp').innerHTML=`
+    <div class="verdict ${right?'ok':'no'}">${right?'✓ Correct':'✗ Incorrect · answer '+'ABCD'[correct]}</div>
+    <p>${item.rationale}</p><h4>Why each choice</h4>
+    ${item.why.map((w,x)=>`<div class="why ${x===correct?'r':(x===state.picked&&!right?'w':'')}"><b>${'ABCD'[x]}.</b> ${w}</div>`).join('')}
+    <div class="takeaway"><b>Bank this</b>${item.takeaway}</div>`;
+  document.getElementById('exp').classList.add('show');
+  const btn=document.getElementById('submit');btn.textContent=last?'Finish':'Next';btn.disabled=false;btn.setAttribute('onclick','doNext()');
+  document.querySelector('.khint').innerHTML=`<span><kbd>⏎</kbd> ${last?'finish':'next'}</span><span><kbd>esc</kbd> back</span>`;
+};
+window.doNext=function(){const q=state.quiz,last=state.i===q.questions.length-1;
+  if(last){saveProgress(q.id,state.score,q.questions.length);bumpStreak();state.view='results';document.querySelector('.main').scrollTo(0,0);paint();}
+  else{state.i++;document.querySelector('.main').scrollTo(0,0);renderQuiz();document.getElementById('top')&&renderTop();}};
+function renderResults(){
+  const q=state.quiz,n=q.questions.length,pct=Math.round(state.score/n*100);
+  const msg=pct>=83?"Strong command of this idea. Push the boundary cases until they're automatic, then move to the next testable idea."
+    :pct>=50?"Solid base with real gaps. The misses cluster on look-alike distinctions — log each and re-test in a few days."
+    :"A content gap, not a reasoning gap — the fixable kind. Re-read the idea, make cards for the distinctions you missed, then retake.";
+  document.getElementById('main').innerHTML=`
+   <div class="pane narrow"><div class="result">
+     <div class="score"><span class="big">${state.score}/${n}</span><span class="pc">${pct}% mastery</span></div>
+     <p>${msg}</p>
+     <div class="rev">${q.questions.map((it,x)=>`<div class="rr"><span class="mk ${state.res[x]?'ok':'no'}">${state.res[x]?'✓':'✗'}</span><span>Q${x+1} · ${it.tag}</span></div>`).join('')}</div>
+     <div class="actionbar"><button class="btn ghost" onclick="go('list',null)">Back to bank</button><button class="btn" onclick="go('quiz','${q.id}')">Retake</button></div>
+   </div></div>`;
+}
+
+/* ==================== schedules / anki ==================== */
+let schedTab="12mo";window.setSchedTab=function(id){schedTab=id;renderSchedules();};
+function renderSchedules(){
+  const s=SCHEDULES.find(x=>x.id===schedTab);
+  document.getElementById('main').innerHTML=`
+   <div class="pane">
+     <div class="h-row"><h1>Study schedules</h1><span class="sub">by time available</span></div>
+     <p class="schwho" style="margin-top:10px">Every plan runs the same three phases — content → application → full-lengths — compressed or stretched to fit.</p>
+     <div class="tabs">${SCHEDULES.map(x=>`<button class="tab ${x.id===schedTab?'on':''}" onclick="setSchedTab('${x.id}')">${x.label}</button>`).join('')}</div>
+     <div class="schmeta"><div><span>timeline</span><b>${s.label}</b></div><div><span>intensity</span><b>${s.hours}</b></div></div>
+     <p class="schwho">${s.who}</p>
+     <table class="ctbl"><tr><th>When</th><th>Phase</th><th>What you're doing</th></tr>
+       ${s.phases.map(p=>`<tr><td><span class="sp">${p.sp}</span></td><td><b>${p.ph}</b></td><td>${p.fo}</td></tr>`).join('')}</table>
+     <div class="cnote"><b>For this timeline</b>${s.note}</div>
+     <div class="cnote"><b>True for every plan</b>Do Anki every day. Spend more time reviewing questions than answering them. Ration your AAMC full-lengths — they're your truest predictors. Take the real exam when your practice full-lengths sit stably at your target, not on a date you picked months ago.</div>
+   </div>`;
+}
+function renderAnki(){
+  document.getElementById('main').innerHTML=`
+   <div class="pane">
+     <div class="h-row"><h1>Anki decks</h1><span class="sub">community-vetted</span></div>
+     <p class="schwho" style="margin-top:10px">Decks r/AnkiMCAT consistently recommends. Anki is the best tool for long-term memory — a supplement to passage practice, never a replacement.</p>
+     <table class="ctbl"><tr><th>Section</th><th>Go-to deck</th></tr>
+       <tr><td><b>Psych / Soc</b></td><td>Mr. Pankow</td></tr>
+       <tr><td><b>Chem / Physics</b></td><td>BioBenoni or MileDown</td></tr>
+       <tr><td><b>Bio / Biochem</b></td><td>MileDown or JackSparrow</td></tr>
+       <tr><td><b>CARS</b></td><td>JackSparrow's CARS deck + daily passages*</td></tr></table>
+     <div class="cnote"><b>* on CARS</b>Anki barely helps CARS — it's a reasoning skill, not content. Use a CARS deck only for strategy reminders; build the skill with daily timed passages.</div>
+     ${DECKS.map(d=>`<div class="deckrow"><div class="dh"><h3>${d.name}</h3><span class="tl">${d.tl}</span></div><p>${d.desc}</p><div class="best">Best for: <b>${d.best}</b></div><a class="dl" href="${d.link}" target="_blank" rel="noopener">Get this deck ↗</a></div>`).join('')}
+     <div class="cnote"><b>How to use them</b>Content review first, then grind cards. Daily new-card limit; review every day. One main deck, not five. If you're pattern-matching answers instead of recalling concepts, rephrase the card. Anki builds recall; UWorld and AAMC build the reasoning the exam scores.</div>
+     <div class="footnote">Decks are free, community-made resources vetted by <b>r/AnkiMCAT</b>. Download links live on the subreddit wiki. Open MCAT is independent and points you to them.</div>
+   </div>`;
+}
+
+/* ==================== keyboard ==================== */
+document.addEventListener('keydown',e=>{
+  const tag=(e.target.tagName||'').toLowerCase();const typing=tag==='input'||tag==='textarea';
+  if(e.key==='/'&&!typing){const s=document.getElementById('search');if(s){e.preventDefault();s.focus();}return;}
+  if(typing&&e.key==='Escape'){e.target.blur();return;}
+  if(state.view==='quiz'){
+    if(e.key==='Escape'){go('list',null);return;}
+    if(!state.locked){
+      let idx=-1;const k=e.key.toLowerCase();
+      if(/^[1-4]$/.test(e.key))idx=+e.key-1;else if(['a','b','c','d'].includes(k))idx='abcd'.indexOf(k);
+      if(idx>=0){e.preventDefault();selectIdx(idx);return;}
+      if(e.key==='Enter'&&state.picked!==null){e.preventDefault();doSubmit();return;}
+    }else if(e.key==='Enter'){e.preventDefault();doNext();return;}
+  }
+  if(state.view==='results'&&e.key==='Escape'){go('list',null);}
+});
+
+paint();
+</script>
+</body>
+</html>
