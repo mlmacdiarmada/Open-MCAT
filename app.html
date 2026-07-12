@@ -208,6 +208,28 @@
   .schmeta b{font-size:17px;font-weight:600;}
   .schmeta span{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:3px;}
   .schwho{font-size:14.5px;color:var(--text2);margin:6px 0 18px;max-width:62ch;line-height:1.55;}
+  .builder{border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:22px 24px;margin:18px 0;}
+  .fld{margin-bottom:18px;}
+  .fld>label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+  .ctrl{display:flex;gap:10px;flex-wrap:wrap;}
+  input[type=date],select,input[type=number]{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);
+    font-family:var(--font);font-size:14px;padding:9px 12px;outline:none;transition:border-color .12s;}
+  input[type=date]:focus,select:focus,input[type=number]:focus{border-color:var(--accent);}
+  input[type=date]{color-scheme:dark;}
+  html[data-theme="light"] input[type=date]{color-scheme:light;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:9px;padding:9px 13px;
+    cursor:pointer;font-size:13.5px;color:var(--text2);transition:all .12s;user-select:none;}
+  .chip:hover{border-color:var(--border2);color:var(--text);}
+  .chip.on{border-color:var(--accent);background:var(--accent-bg);color:var(--text);}
+  .chip .bx{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--text3);display:grid;place-items:center;flex:0 0 15px;}
+  .chip.on .bx{background:var(--accent);border-color:var(--accent);}
+  .chip.on .bx::after{content:"✓";color:#fff;font-size:10px;font-weight:700;}
+  .genrow{display:flex;align-items:center;gap:14px;margin-top:6px;flex-wrap:wrap;}
+  .planout{margin-top:8px;}
+  .flag{background:var(--no-bg);border:1px solid var(--no-bd);border-radius:9px;padding:12px 15px;font-size:13.5px;color:var(--text);margin:10px 0;line-height:1.5;}
+  .flag b{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:4px;color:var(--no);}
+  .flag.warn{background:rgba(226,170,70,.12);border-color:rgba(226,170,70,.4);} .flag.warn b{color:#d99a2e;}
   .ctbl{width:100%;border-collapse:collapse;margin:6px 0 22px;font-size:14px;}
   .ctbl th,.ctbl td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
   .ctbl th{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);font-weight:600;}
@@ -293,6 +315,31 @@ const DECKS=[
  {name:"Subject boosters",tl:"targeted single-topic decks",best:"patching one weak subject",desc:"Smaller decks for a single area: BioBenoni (a strong C/P pick), Tiramiwho's physics equations, hormone and periodic-table memory decks. Add on top of a main deck only where you have a specific weakness.",link:WIKI}
 ];
 
+/* ==================== recommended resources ====================
+   For Amazon books: replace the "#" in url with YOUR tagged affiliate
+   link (grab it via SiteStripe / "Get link" on the product page).
+   Amazon requires the disclosure shown at the top of this page. */
+const RESOURCES=[
+ {cat:"Full content review",items:[
+   {name:"Kaplan MCAT Complete 7-Book Subject Review",by:"Kaplan",amazon:true,url:"https://amzn.to/4eWyqjZ",blurb:"The most popular comprehensive set — seven books across every subject with practice and online resources. The default full-content choice for most people."},
+   {name:"The Princeton Review MCAT Subject Review Complete",by:"The Princeton Review",amazon:true,url:"https://amzn.to/4pd8HXT",blurb:"Very thorough content with strong diagrams. Denser than Kaplan; excellent as a deep reference or a second source for weak areas."},
+   {name:"Examkrackers MCAT Complete Study Package",by:"Examkrackers",amazon:true,url:"https://amzn.to/4yihjRi",blurb:"Concise and high-yield. Favored by students who want the essentials without the bulk — pairs well with heavy practice."}
+ ]},
+ {cat:"Advanced & practice",items:[
+   {name:"MCAT 528 Advanced Prep",by:"Kaplan",amazon:true,url:"https://amzn.to/4fzB8ev",blurb:"Higher-difficulty content aimed at top-percentile scorers. Worth it if you're targeting the 520+ range specifically."},
+   {name:"Sterling Test Prep MCAT Practice Questions",by:"Sterling",amazon:true,url:"https://amzn.to/44X9qDd",blurb:"High-volume discrete practice across the sciences — good for drilling recall alongside passage work."},
+   {name:"Kaplan MCAT Flashcards",by:"Kaplan",amazon:true,url:"https://amzn.to/4pmgRgY",blurb:"Physical high-yield flashcards. A portable supplement, though your own Anki will do more for long-term retention."}
+ ]},
+ {cat:"CARS",items:[
+   {name:"Jack Westin — Daily CARS Passages",by:"Jack Westin",amazon:false,url:"https://jackwestin.com/",blurb:"CARS is a daily-reps game, and Jack Westin's free daily passages are the easiest way to keep the habit. Build the reasoning the section rewards — no book required."}
+ ]},
+ {cat:"The essentials (not on Amazon — direct links)",note:"These aren't sold on Amazon, so these are plain links with no affiliate tag. They're also the two most important resources on this whole page — prioritize them.",items:[
+   {name:"AAMC Official Prep",by:"AAMC",amazon:false,url:"https://students-residents.aamc.org/prepare-mcat-exam/prepare-mcat-exam",blurb:"Written by the people who write the exam — Section Banks, full-lengths, question packs. The single most predictive practice material. Ration it toward the end."},
+   {name:"UWorld MCAT QBank",by:"UWorld",amazon:false,url:"https://www.uworld.com/mcat/",blurb:"The best third-party question bank, with elite explanations. Your core application-phase engine."}
+ ]},
+ {cat:"Spaced repetition",note:"The best MCAT Anki decks are free and community-made — see the Anki page in the sidebar rather than buying anything.",items:[]}
+];
+
 /* ==================== storage / progress ==================== */
 const store={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
 function getProgress(){return store.get('omcat_prog_v2')||{};}
@@ -360,6 +407,7 @@ function renderSide(){
     <div class="foot">
       <button class="footlink ${state.view==='sched'?'active':''}" onclick="go('sched')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Schedules</button>
       <button class="footlink ${state.view==='anki'?'active':''}" onclick="go('anki')"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 4v16"/></svg>Anki decks</button>
+      <button class="footlink ${state.view==='res'?'active':''}" onclick="go('res')"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h13v18H6a2 2 0 01-2-2z"/><path d="M19 3v18"/></svg>Books &amp; resources</button>
       <div class="statline"><span>Done <b>${doneN}/${BANK.length}</b></span><span>Streak <b>${streak.count}d</b></span></div>
       ${doneN?`<div style="padding:2px 10px 6px"><button class="reset" onclick="resetProgress()">Reset progress</button></div>`:''}
     </div>`;
@@ -376,6 +424,7 @@ function renderTop(){
   else if(state.view==='results')crumb=`<button onclick="go('list',null)">Question bank</button> › <b>${state.quiz.idea}</b> · Results`;
   else if(state.view==='sched')crumb=`<b>Study schedules</b>`;
   else if(state.view==='anki')crumb=`<b>Anki decks</b>`;
+  else if(state.view==='res')crumb=`<b>Books &amp; resources</b>`;
   const th=getTheme();
   document.getElementById('top').innerHTML=`
    <div class="topbar">
@@ -399,6 +448,7 @@ function renderMain(){
   if(state.view==='results')return renderResults();
   if(state.view==='sched')return renderSchedules();
   if(state.view==='anki')return renderAnki();
+  if(state.view==='res')return renderResources();
 }
 function renderList(){
   const q=state.search.trim().toLowerCase();
@@ -480,19 +530,134 @@ function renderResults(){
 
 /* ==================== schedules / anki ==================== */
 let schedTab="12mo";window.setSchedTab=function(id){schedTab=id;renderSchedules();};
+const RESOPTS=[
+  {k:"books",label:"Content review books"},
+  {k:"uworld",label:"UWorld QBank"},
+  {k:"aamc",label:"AAMC Official Prep"},
+  {k:"anki",label:"Anki decks"},
+  {k:"cars",label:"Daily CARS (Jack Westin)"},
+  {k:"fls",label:"3rd-party full-lengths"}
+];
+let customState=store.get('omcat_plan')||{date:"",hours:"15",stage:"start",res:{anki:true,cars:true},result:null};
+window.toggleRes=function(k,elm){
+  const d=document.getElementById('pdate'),h=document.getElementById('phours'),s=document.getElementById('pstage');
+  if(d)customState.date=d.value;if(h)customState.hours=h.value;if(s)customState.stage=s.value;
+  customState.res[k]=!customState.res[k];store.set('omcat_plan',customState);
+  if(elm)elm.classList.toggle('on',!!customState.res[k]);
+};
+window.setPlanField=function(f,v){customState[f]=v;store.set('omcat_plan',customState);};
+
+function buildPlan(){
+  const el=id=>document.getElementById(id);
+  customState.date=el('pdate').value;customState.hours=el('phours').value;customState.stage=el('pstage').value;
+  const r=customState.res;const flags=[];
+  if(!customState.date){customState.result={error:"Pick your test date to generate a plan."};store.set('omcat_plan',customState);return renderSchedules();}
+  const today=new Date();today.setHours(0,0,0,0);
+  const td=new Date(customState.date+"T00:00:00");
+  const days=Math.round((td-today)/86400000);
+  const W=Math.floor(days/7);
+  if(days<=0){customState.result={error:"That date is in the past — pick a future test date."};store.set('omcat_plan',customState);return renderSchedules();}
+  const hrs=+customState.hours||10;const total=W*hrs;
+  const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  const addW=(d,w)=>{const n=new Date(d);n.setDate(n.getDate()+Math.round(w*7));return n;};
+  // phase allocation
+  let flW=Math.min(6,Math.max(2,Math.round(W*0.18)));if(W<=4)flW=Math.max(1,Math.round(W*0.35));
+  const R=Math.max(0,W-flW);
+  const cf=customState.stage==='start'?0.60:customState.stage==='some'?0.40:0.15;
+  let contentW=Math.round(R*cf),appW=R-contentW;
+  if(W<=3){contentW=customState.stage==='start'?Math.max(1,R):0;appW=R-contentW;}
+  // book names
+  const bookTxt=r.books?"your content books":"a content set (none selected — use the free Khan Academy archive, or grab one from the Resources page)";
+  const cars=r.cars?"Jack Westin's free daily passages":"daily CARS practice (add Jack Westin from Resources — it's free)";
+  const anki=r.anki;
+  const phases=[];const t0=today;
+  if(contentW>0){
+    const s=t0,e=addW(t0,contentW);
+    phases.push({range:`${fmt(s)} – ${fmt(e)}`,wk:`${contentW} wk`,ph:"Content",tasks:[
+      `Work through ${bookTxt} section by section — cover every content area.`,
+      anki?"Build Anki daily as you learn each topic; review every day without exception.":"Add a spaced-repetition deck (Anki page) — daily review is your biggest retention lever.",
+      `Start 1–2 CARS passages a day using ${cars}, from day one.`,
+      "Take a cold diagnostic in week 1 to target your weakest areas first."
+    ]});
+  }
+  const appStart=addW(t0,contentW),appEnd=addW(t0,contentW+appW);
+  if(appW>0){
+    phases.push({range:`${fmt(appStart)} – ${fmt(appEnd)}`,wk:`${appW} wk`,ph:"Application",tasks:[
+      r.uworld?"Do UWorld blocks daily — and spend 2–3× the block time reviewing every question, right or wrong.":"⚠ No question bank selected. This phase needs one — UWorld is the standard and is where the score is built.",
+      "Keep an error log of every miss (and every lucky right); read it weekly and attack recurring patterns.",
+      r.aamc?"Begin AAMC Section Banks in the back half of this phase — expect them to be humbling.":"",
+      `Keep Anki and daily CARS going throughout.`
+    ].filter(Boolean)});
+  }
+  const flStart=appEnd;
+  phases.push({range:`${fmt(flStart)} – ${fmt(td)}`,wk:`${flW} wk`,ph:"Full-lengths",tasks:[
+    r.aamc?"Take AAMC full-lengths spaced through these weeks, a full day reviewing each. Save the most recent one for ~7–10 days out.":"⚠ No AAMC material selected. Get the official full-lengths — they're the truest score predictors on the exam.",
+    r.fls?"Use any 3rd-party full-lengths earlier for stamina; trust AAMC scores for accuracy.":"",
+    "Taper the final 4–5 days: light review only, no new material, full sleep.",
+    "Rule: only sit the exam if your practice full-lengths are stably at your target."
+  ].filter(Boolean)});
+  // flags
+  if(W<6)flags.push({t:"warn",b:"Tight timeline",m:`Under 6 weeks is triage territory. Prioritize practice over new content, and if your practice scores are far from target, seriously weigh rescheduling — a delayed test with the right score beats an on-time one with the wrong score.`});
+  if(customState.stage==='start'&&total<200)flags.push({t:"warn",b:"Low total hours",m:`~${hrs} hrs/week over ${W} weeks is about ${total} focused hours. From scratch, strong preps usually run 300–400+. Consider more hours per week, or an earlier start.`});
+  if(!r.uworld)flags.push({t:"flag",b:"Missing a question bank",m:"You didn't select UWorld or an equivalent. Passage practice is what builds the score — this is the most important gap to close."});
+  if(!r.aamc)flags.push({t:"flag",b:"Missing AAMC material",m:"The AAMC's own materials are the most predictive practice that exists. Budget for the official prep bundle before test day."});
+  customState.result={W,days,hrs,total,phases,flags,testStr:td.toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'})};
+  store.set('omcat_plan',customState);renderSchedules();
+}
+window.buildPlan=buildPlan;
+
+function renderCustom(){
+  const r=customState.res;const res=customState.result;
+  const chips=RESOPTS.map(o=>`<span class="chip ${r[o.k]?'on':''}" onclick="toggleRes('${o.k}',this)"><span class="bx"></span>${o.label}</span>`).join('');
+  let out='';
+  if(res&&res.error){out=`<div class="flag"><b>Heads up</b>${res.error}</div>`;}
+  else if(res){
+    out=`<div class="schmeta" style="margin-top:22px">
+        <div><span>test date</span><b>${res.testStr}</b></div>
+        <div><span>time left</span><b>${res.W} weeks</b></div>
+        <div><span>est. total</span><b>~${res.total} hrs</b></div>
+      </div>
+      <table class="ctbl"><tr><th>When</th><th>Phase</th><th>What you're doing</th></tr>
+        ${res.phases.map(p=>`<tr><td><span class="sp">${p.range}</span><div style="font-family:var(--mono);font-size:10.5px;color:var(--text3);margin-top:3px">${p.wk}</div></td><td><b>${p.ph}</b></td><td><ul style="margin:0;padding-left:16px;line-height:1.6">${p.tasks.map(t=>`<li>${t}</li>`).join('')}</ul></td></tr>`).join('')}
+      </table>
+      ${res.flags.map(f=>`<div class="flag ${f.t==='warn'?'warn':''}"><b>${f.b}</b>${f.m}</div>`).join('')}
+      <div class="cnote"><b>True for every plan</b>Anki daily. Review more than you answer. Ration AAMC full-lengths. Take the exam when your practice full-lengths sit stably at target — the date serves the score.</div>`;
+  }
+  return `
+     <div class="builder">
+       <div class="fld"><label>Your test date</label><div class="ctrl"><input type="date" id="pdate" value="${customState.date}"></div></div>
+       <div class="fld"><label>Hours per week you can study</label><div class="ctrl">
+         <select id="phours">${["6","10","15","20","25","30","40"].map(h=>`<option value="${h}" ${customState.hours===h?'selected':''}>${h} hrs/week</option>`).join('')}</select></div></div>
+       <div class="fld"><label>Where you are now</label><div class="ctrl">
+         <select id="pstage">
+           <option value="start" ${customState.stage==='start'?'selected':''}>Just starting — content review ahead of me</option>
+           <option value="some" ${customState.stage==='some'?'selected':''}>Some content done — mixing review and practice</option>
+           <option value="practice" ${customState.stage==='practice'?'selected':''}>Content solid — focused on practice</option>
+         </select></div></div>
+       <div class="fld"><label>Resources you have access to</label><div class="chips">${chips}</div></div>
+       <div class="genrow"><button class="btn" onclick="buildPlan()">Generate my plan</button>
+         <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">Saved on this device</span></div>
+     </div>
+     <div class="planout">${out}</div>`;
+}
 function renderSchedules(){
-  const s=SCHEDULES.find(x=>x.id===schedTab);
-  document.getElementById('main').innerHTML=`
-   <div class="pane">
-     <div class="h-row"><h1>Study schedules</h1><span class="sub">by time available</span></div>
-     <p class="schwho" style="margin-top:10px">Every plan runs the same three phases — content → application → full-lengths — compressed or stretched to fit.</p>
-     <div class="tabs">${SCHEDULES.map(x=>`<button class="tab ${x.id===schedTab?'on':''}" onclick="setSchedTab('${x.id}')">${x.label}</button>`).join('')}</div>
+  const isCustom=schedTab==='custom';
+  const s=isCustom?null:SCHEDULES.find(x=>x.id===schedTab);
+  const tabs=SCHEDULES.map(x=>`<button class="tab ${x.id===schedTab?'on':''}" onclick="setSchedTab('${x.id}')">${x.label}</button>`).join('')
+    +`<button class="tab ${isCustom?'on':''}" onclick="setSchedTab('custom')">✦ Build my plan</button>`;
+  const bodyPreset=s?`
      <div class="schmeta"><div><span>timeline</span><b>${s.label}</b></div><div><span>intensity</span><b>${s.hours}</b></div></div>
      <p class="schwho">${s.who}</p>
      <table class="ctbl"><tr><th>When</th><th>Phase</th><th>What you're doing</th></tr>
        ${s.phases.map(p=>`<tr><td><span class="sp">${p.sp}</span></td><td><b>${p.ph}</b></td><td>${p.fo}</td></tr>`).join('')}</table>
      <div class="cnote"><b>For this timeline</b>${s.note}</div>
-     <div class="cnote"><b>True for every plan</b>Do Anki every day. Spend more time reviewing questions than answering them. Ration your AAMC full-lengths — they're your truest predictors. Take the real exam when your practice full-lengths sit stably at your target, not on a date you picked months ago.</div>
+     <div class="cnote"><b>True for every plan</b>Do Anki every day. Spend more time reviewing questions than answering them. Ration your AAMC full-lengths — they're your truest predictors. Take the real exam when your practice full-lengths sit stably at your target, not on a date you picked months ago.</div>`:'';
+  document.getElementById('main').innerHTML=`
+   <div class="pane">
+     <div class="h-row"><h1>Study schedules</h1><span class="sub">${isCustom?'personalized':'by time available'}</span></div>
+     <p class="schwho" style="margin-top:10px">${isCustom?'Enter your test date and what you have — get a dated plan built around the same three phases.':'Every plan runs the same three phases — content → application → full-lengths — compressed or stretched to fit.'}</p>
+     <div class="tabs">${tabs}</div>
+     ${isCustom?renderCustom():bodyPreset}
    </div>`;
 }
 function renderAnki(){
@@ -509,6 +674,28 @@ function renderAnki(){
      ${DECKS.map(d=>`<div class="deckrow"><div class="dh"><h3>${d.name}</h3><span class="tl">${d.tl}</span></div><p>${d.desc}</p><div class="best">Best for: <b>${d.best}</b></div><a class="dl" href="${d.link}" target="_blank" rel="noopener">Get this deck ↗</a></div>`).join('')}
      <div class="cnote"><b>How to use them</b>Content review first, then grind cards. Daily new-card limit; review every day. One main deck, not five. If you're pattern-matching answers instead of recalling concepts, rephrase the card. Anki builds recall; UWorld and AAMC build the reasoning the exam scores.</div>
      <div class="footnote">Decks are free, community-made resources vetted by <b>r/AnkiMCAT</b>. Download links live on the subreddit wiki. Open MCAT is independent and points you to them.</div>
+   </div>`;
+}
+function renderResources(){
+  const blocks=RESOURCES.map(g=>{
+    const items=g.items.length?g.items.map(it=>`
+      <div class="deckrow"><div class="dh"><h3>${it.name}</h3><span class="tl">${it.by}</span></div>
+        <p>${it.blurb}</p>
+        <a class="dl" href="${it.url}" target="_blank" rel="noopener nofollow sponsored">${it.amazon?'View on Amazon ↗':'Go to '+it.by+' ↗'}</a>
+        ${it.amazon&&it.url==='#'?`<span style="font-family:var(--mono);font-size:10.5px;color:var(--text3);margin-left:10px">— add your affiliate link</span>`:''}
+      </div>`).join(''):'';
+    return `<section class="sec-res">
+      <div class="h-row" style="margin-top:18px"><h1 style="font-size:16px">${g.cat}</h1></div>
+      ${g.note?`<div class="cnote"><b>Note</b>${g.note}</div>`:''}
+      ${items}
+    </section>`;}).join('');
+  document.getElementById('main').innerHTML=`
+   <div class="pane">
+     <div class="h-row"><h1>Books &amp; resources</h1><span class="sub">the standard MCAT stack</span></div>
+     <div class="cnote" style="border-left-color:var(--text3);margin-top:12px"><b>Disclosure</b>As an Amazon Associate, Open MCAT earns from qualifying purchases. Amazon links below are affiliate links; the "essentials" links are plain, unaffiliated links. Prices and availability are set by the retailer, and a recommendation is never influenced by commissions.</div>
+     <p class="schwho" style="margin-top:14px">The resources students most consistently recommend. You don't need all of them — one content set, the AAMC material, and a question bank is the real core; everything else is a supplement.</p>
+     ${blocks}
+     <div class="footnote">Recommendations reflect general community consensus, not medical or academic advice. Verify current editions before buying. Open MCAT is independent and not affiliated with the AAMC, UWorld, or any publisher.</div>
    </div>`;
 }
 
@@ -528,6 +715,11 @@ document.addEventListener('keydown',e=>{
   }
   if(state.view==='results'&&e.key==='Escape'){go('list',null);}
 });
+
+/* deep-link support: app.html#resources / #schedules / #anki */
+(function(){const h=(location.hash||'').replace('#','').toLowerCase();
+  const map={resources:'res',books:'res',schedules:'sched',sched:'sched',anki:'anki'};
+  if(map[h])state.view=map[h];})();
 
 paint();
 </script>
