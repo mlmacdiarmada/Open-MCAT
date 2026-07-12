@@ -230,6 +230,28 @@
   .flag{background:var(--no-bg);border:1px solid var(--no-bd);border-radius:9px;padding:12px 15px;font-size:13.5px;color:var(--text);margin:10px 0;line-height:1.5;}
   .flag b{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:4px;color:var(--no);}
   .flag.warn{background:rgba(226,170,70,.12);border-color:rgba(226,170,70,.4);} .flag.warn b{color:#d99a2e;}
+  .cal{margin-top:18px;}
+  .callegend{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--text3);margin-bottom:14px;}
+  .callegend span{display:inline-flex;align-items:center;gap:5px;}
+  .callegend i{width:9px;height:9px;border-radius:3px;display:inline-block;}
+  .calmonth{font-family:var(--font);font-size:15px;font-weight:600;margin:20px 0 9px;letter-spacing:-.01em;}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .caldow{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--text3);text-align:center;padding-bottom:2px;}
+  .calcell{min-height:80px;border:1px solid var(--border);border-radius:8px;padding:6px 7px;background:var(--panel);overflow:hidden;}
+  .calcell.blank{background:transparent;border:1px solid transparent;}
+  .calcell.blank .caldate{color:var(--text3);opacity:.5;}
+  .caldate{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text2);}
+  .caltag{display:inline-block;font-family:var(--mono);font-size:8.5px;letter-spacing:.02em;text-transform:uppercase;padding:1px 5px;border-radius:4px;margin-left:5px;}
+  .caltask{color:var(--text2);font-size:10px;line-height:1.35;margin-top:5px;}
+  .calcell.k-content{border-left:2px solid var(--accent);} .k-content .caltag{background:var(--accent-bg);color:var(--accent);}
+  .calcell.k-app{border-left:2px solid var(--accent);} .k-app .caltag{background:var(--accent-bg);color:var(--accent);}
+  .calcell.k-fl{border-left:2px solid #d99a2e;} .k-fl .caltag{background:rgba(226,170,70,.16);color:#d99a2e;}
+  .calcell.k-review{border-left:2px solid #d99a2e;} .k-review .caltag{background:rgba(226,170,70,.10);color:#d99a2e;}
+  .calcell.k-taper{border-left:2px solid var(--text3);} .k-taper .caltag{background:var(--raise2);color:var(--text2);}
+  .calcell.k-rest{opacity:.72;} .k-rest .caltag{background:var(--raise2);color:var(--text3);}
+  .calcell.k-mile{border-left:2px solid var(--ok);} .k-mile .caltag{background:var(--ok-bg);color:var(--ok);}
+  .calcell.k-test{border-left:2px solid var(--ok);background:var(--ok-bg);} .k-test .caltag{background:var(--ok);color:#fff;}
+  @media (max-width:640px){.calcell{min-height:64px;padding:4px 5px;} .caltask{font-size:9px;} .caltag{display:none;}}
   .ctbl{width:100%;border-collapse:collapse;margin:6px 0 22px;font-size:14px;}
   .ctbl th,.ctbl td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
   .ctbl th{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);font-weight:600;}
@@ -307,11 +329,11 @@ const SCHEDULES=[
 ];
 const WIKI="https://www.reddit.com/r/AnkiMCAT/";
 const DECKS=[
- {name:"MileDown",tl:"~2,900 cards · all sections",best:"efficient full-content review · strong B/B and C/P",desc:"The most widely used all-in-one deck. Concise, image-rich cloze cards in seven subdecks, built from the MileDown review sheets and the 300-page Khan Academy P/S doc. The default for most people, especially on a tighter timeline.",link:WIKI},
- {name:"Mr. Pankow",tl:"~2,200 cards · Psych/Soc",best:"the P/S community favorite",desc:"The consensus best deck for P/S. Teaches concepts with real examples and applied nuance rather than bare definitions, organized around the Khan Academy / AAMC framework. If sociology is your gap, the highest-value deck to run.",link:WIKI},
- {name:"JackSparrow2048",tl:"~5,900 cards · all sections",best:"reading-heavy learners with a long runway",desc:"A comprehensive, content-heavy deck of basic front/back cards with paragraph backs — made by a 527 scorer. Slower and denser than MileDown; great with months to spare. Also offers a separate CARS deck.",link:WIKI},
- {name:"Ortho528",tl:"4,000+ cards · all sections",best:"comprehensive, from-scratch building",desc:"A very thorough from-scratch deck (creator scored 132 on all content sections), mixing cloze and image cards. Good if you're building content knowledge from the ground up.",link:WIKI},
- {name:"AnKing MCAT",tl:"maintained on AnkiHub",best:"a continuously updated deck",desc:"An actively maintained community deck on AnkiHub. The latest version needs a paid AnkiHub subscription; an earlier version circulates via r/AnkiMCAT.",link:"https://www.ankihub.net/mcat-deck"},
+ {name:"MileDown",tl:"~2,900 cards · all sections",best:"efficient full-content review · strong B/B and C/P",desc:"The most widely used all-in-one deck. Concise, image-rich cloze cards in seven subdecks, built from the MileDown review sheets and the 300-page Khan Academy P/S doc. The default for most people, especially on a tighter timeline.",link:"https://drive.google.com/file/d/1neyVXp_prnmVManHHCB6lZOOL6xEykPE/view?pli=1"},
+ {name:"Mr. Pankow",tl:"~2,200 cards · Psych/Soc",best:"the P/S community favorite",desc:"The consensus best deck for P/S. Teaches concepts with real examples and applied nuance rather than bare definitions, organized around the Khan Academy / AAMC framework. If sociology is your gap, the highest-value deck to run.",link:"https://ankiweb.net/shared/info/710572280"},
+ {name:"JackSparrow2048",tl:"~5,900 cards · all sections",best:"reading-heavy learners with a long runway",desc:"A comprehensive, content-heavy deck of basic front/back cards with paragraph backs — made by a 527 scorer. Slower and denser than MileDown; great with months to spare. Also offers a separate CARS deck.",link:"https://drive.google.com/file/d/1hIbhOPsbE-Ir4V5ONSSk345wVXzLqip2/view?usp=sharing"},
+ {name:"Ortho528",tl:"4,000+ cards · all sections",best:"comprehensive, from-scratch building",desc:"A very thorough from-scratch deck (creator scored 132 on all content sections), mixing cloze and image cards. Good if you're building content knowledge from the ground up.",link:"https://drive.google.com/drive/folders/1riXzrofY7h6UInHbBp0iMjY0LaQ_5Oue"},
+ {name:"AnKing MCAT",tl:"maintained on AnkiHub",best:"a continuously updated deck",desc:"An actively maintained community deck on AnkiHub. The latest version needs a paid AnkiHub subscription; an earlier version circulates via r/AnkiMCAT.",link:"https://ankiweb.net/shared/info/1409102462"},
  {name:"Subject boosters",tl:"targeted single-topic decks",best:"patching one weak subject",desc:"Smaller decks for a single area: BioBenoni (a strong C/P pick), Tiramiwho's physics equations, hormone and periodic-table memory decks. Add on top of a main deck only where you have a specific weakness.",link:WIKI}
 ];
 
@@ -343,11 +365,18 @@ const RESOURCES=[
 /* ==================== storage / progress ==================== */
 const store={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
 function getProgress(){return store.get('omcat_prog_v2')||{};}
-function saveProgress(id,score,total){const p=getProgress(),pr=p[id];if(!pr||score>pr.best)p[id]={best:score,total,ts:Date.now()};else p[id].total=total;store.set('omcat_prog_v2',p);}
+function getStats(){return store.get('omcat_stats')||{answered:0,correct:0};}
+function saveProgress(id,score,total,res){
+  const p=getProgress();const pr=p[id]||{best:0,attempts:0,first:Date.now()};
+  pr.attempts=(pr.attempts||0)+1;pr.last=score;pr.total=total;pr.ts=Date.now();if(!pr.first)pr.first=Date.now();
+  if(score>(pr.best||0)){pr.best=score;pr.bestPerQ=res?res.slice():null;}
+  pr.perQ=res?res.slice():null;p[id]=pr;store.set('omcat_prog_v2',p);
+  const st=getStats();st.answered+=total;st.correct+=score;store.set('omcat_stats',st);
+}
 function mastery(id){const p=getProgress()[id];const total=(BANK.find(q=>q.id===id)||{}).questions.length||1;if(!p)return{best:0,total,pct:0,done:false};const pct=Math.round(p.best/total*100);return{best:p.best,total,pct,done:pct===100};}
 function getStreak(){return store.get('omcat_streak')||{count:0,last:null};}
 function bumpStreak(){const s=getStreak();const t=new Date().toDateString();if(s.last===t)return;const y=new Date(Date.now()-864e5).toDateString();s.count=(s.last===y)?s.count+1:1;s.last=t;store.set('omcat_streak',s);}
-function resetProgress(){if(confirm('Clear saved progress and streak on this device?')){store.del('omcat_prog_v2');store.del('omcat_streak');paint();}}
+function resetProgress(){if(confirm('Clear saved progress, stats, and streak on this device?')){store.del('omcat_prog_v2');store.del('omcat_streak');store.del('omcat_stats');paint();}}
 window.resetProgress=resetProgress;
 
 /* theme */
@@ -408,6 +437,7 @@ function renderSide(){
       <button class="footlink ${state.view==='sched'?'active':''}" onclick="go('sched')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Schedules</button>
       <button class="footlink ${state.view==='anki'?'active':''}" onclick="go('anki')"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 4v16"/></svg>Anki decks</button>
       <button class="footlink ${state.view==='res'?'active':''}" onclick="go('res')"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h13v18H6a2 2 0 01-2-2z"/><path d="M19 3v18"/></svg>Books &amp; resources</button>
+      <button class="footlink ${state.view==='stats'?'active':''}" onclick="go('stats')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M4 20h16"/></svg>Analytics</button>
       <div class="statline"><span>Done <b>${doneN}/${BANK.length}</b></span><span>Streak <b>${streak.count}d</b></span></div>
       ${doneN?`<div style="padding:2px 10px 6px"><button class="reset" onclick="resetProgress()">Reset progress</button></div>`:''}
     </div>`;
@@ -425,6 +455,7 @@ function renderTop(){
   else if(state.view==='sched')crumb=`<b>Study schedules</b>`;
   else if(state.view==='anki')crumb=`<b>Anki decks</b>`;
   else if(state.view==='res')crumb=`<b>Books &amp; resources</b>`;
+  else if(state.view==='stats')crumb=`<b>Analytics</b>`;
   const th=getTheme();
   document.getElementById('top').innerHTML=`
    <div class="topbar">
@@ -449,6 +480,7 @@ function renderMain(){
   if(state.view==='sched')return renderSchedules();
   if(state.view==='anki')return renderAnki();
   if(state.view==='res')return renderResources();
+  if(state.view==='stats')return renderAnalytics();
 }
 function renderList(){
   const q=state.search.trim().toLowerCase();
@@ -512,7 +544,7 @@ window.doSubmit=function(){
   document.querySelector('.khint').innerHTML=`<span><kbd>⏎</kbd> ${last?'finish':'next'}</span><span><kbd>esc</kbd> back</span>`;
 };
 window.doNext=function(){const q=state.quiz,last=state.i===q.questions.length-1;
-  if(last){saveProgress(q.id,state.score,q.questions.length);bumpStreak();state.view='results';document.querySelector('.main').scrollTo(0,0);paint();}
+  if(last){saveProgress(q.id,state.score,q.questions.length,state.res);bumpStreak();state.view='results';document.querySelector('.main').scrollTo(0,0);paint();}
   else{state.i++;document.querySelector('.main').scrollTo(0,0);renderQuiz();document.getElementById('top')&&renderTop();}};
 function renderResults(){
   const q=state.quiz,n=q.questions.length,pct=Math.round(state.score/n*100);
@@ -601,10 +633,64 @@ function buildPlan(){
   if(customState.stage==='start'&&total<200)flags.push({t:"warn",b:"Low total hours",m:`~${hrs} hrs/week over ${W} weeks is about ${total} focused hours. From scratch, strong preps usually run 300–400+. Consider more hours per week, or an earlier start.`});
   if(!r.uworld)flags.push({t:"flag",b:"Missing a question bank",m:"You didn't select UWorld or an equivalent. Passage practice is what builds the score — this is the most important gap to close."});
   if(!r.aamc)flags.push({t:"flag",b:"Missing AAMC material",m:"The AAMC's own materials are the most predictive practice that exists. Budget for the official prep bundle before test day."});
-  customState.result={W,days,hrs,total,phases,flags,testStr:td.toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'})};
+  // day-by-day calendar
+  const subj=['Biochemistry','Biology','General Chemistry','Organic Chemistry','Physics','Psych/Soc'];
+  let si=0;const cal=[];const cEnd=contentW*7,aEnd=(contentW+appW)*7;
+  for(let off=0;off<=days;off++){
+    const dd=new Date(today);dd.setDate(dd.getDate()+off);const dow=dd.getDay();const untl=days-off;let e;
+    if(off===days)e={kind:'test',tag:'Test day',task:'Test day — arrive rested and trust your prep.'};
+    else if(untl<=1)e={kind:'rest',tag:'Rest',task:'Full rest. Pack your bag, sleep early.'};
+    else if(untl<=4)e={kind:'taper',tag:'Taper',task:'Light review only — no new material, full sleep.'};
+    else{
+      const ph=off<cEnd?'content':(off<aEnd?'app':'fl');
+      if(ph==='content'){
+        if(off===0)e={kind:'mile',tag:'Diagnostic',task:'Take a cold diagnostic; log your weak areas.'};
+        else if(dow===0)e={kind:'rest',tag:'Light',task:'Anki + 1 CARS passage. Rest day.'};
+        else{const s=subj[si++%subj.length];e={kind:'content',tag:'Content',task:`${s} review + Anki + 1 CARS.`};}
+      }else if(ph==='app'){
+        if(dow===0)e={kind:'rest',tag:'Light',task:'Anki + read error log + 1 CARS. Rest.'};
+        else e={kind:'app',tag:'Practice',task:'UWorld block + full review + Anki + 2 CARS.'};
+      }else{
+        if(dow===6)e={kind:'fl',tag:'Full-length',task:(r.aamc?'AAMC ':'')+'full-length under real conditions.'};
+        else if(dow===0)e={kind:'review',tag:'FL review',task:'Full day reviewing the full-length.'};
+        else e={kind:'app',tag:'Targeted',task:'Section Bank + error-log topics + Anki + CARS.'};
+      }
+    }
+    cal.push({t:dd.getTime(),kind:e.kind,tag:e.tag,task:e.task});
+  }
+  customState.result={W,days,hrs,total,phases,flags,cal,testStr:td.toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'})};
   store.set('omcat_plan',customState);renderSchedules();
 }
 window.buildPlan=buildPlan;
+window.toggleCal=function(){customState.showCal=!customState.showCal;store.set('omcat_plan',customState);renderSchedules();};
+function renderCalendar(cal){
+  if(!cal||!cal.length)return'';
+  const kc={content:'k-content',app:'k-app',fl:'k-fl',review:'k-review',rest:'k-rest',taper:'k-taper',mile:'k-mile',test:'k-test'};
+  const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const byKey={};cal.forEach(e=>{byKey[new Date(e.t).toDateString()]=e;});
+  const first=new Date(cal[0].t),last=new Date(cal[cal.length-1].t);
+  let html='<div class="cal"><div class="callegend">'
+    +'<span><i style="background:var(--accent)"></i>Study</span>'
+    +'<span><i style="background:#d99a2e"></i>Full-length / review</span>'
+    +'<span><i style="background:var(--text3)"></i>Rest / taper</span>'
+    +'<span><i style="background:var(--ok)"></i>Diagnostic / test</span></div>';
+  let cur=new Date(first.getFullYear(),first.getMonth(),1);
+  const end=new Date(last.getFullYear(),last.getMonth(),1);
+  while(cur<=end){
+    const y=cur.getFullYear(),m=cur.getMonth();
+    html+=`<div class="calmonth">${cur.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div><div class="calgrid">`
+      +DOW.map(d=>`<div class="caldow">${d}</div>`).join('');
+    const fd=new Date(y,m,1).getDay();for(let i=0;i<fd;i++)html+='<div class="calcell blank"></div>';
+    const dim=new Date(y,m+1,0).getDate();
+    for(let d=1;d<=dim;d++){
+      const e=byKey[new Date(y,m,d).toDateString()];
+      html+=e?`<div class="calcell ${kc[e.kind]}"><span class="caldate">${d}</span><span class="caltag">${e.tag}</span><div class="caltask">${e.task}</div></div>`
+             :`<div class="calcell blank"><span class="caldate">${d}</span></div>`;
+    }
+    html+='</div>';cur=new Date(y,m+1,1);
+  }
+  return html+'</div>';
+}
 
 function renderCustom(){
   const r=customState.res;const res=customState.result;
@@ -621,7 +707,9 @@ function renderCustom(){
         ${res.phases.map(p=>`<tr><td><span class="sp">${p.range}</span><div style="font-family:var(--mono);font-size:10.5px;color:var(--text3);margin-top:3px">${p.wk}</div></td><td><b>${p.ph}</b></td><td><ul style="margin:0;padding-left:16px;line-height:1.6">${p.tasks.map(t=>`<li>${t}</li>`).join('')}</ul></td></tr>`).join('')}
       </table>
       ${res.flags.map(f=>`<div class="flag ${f.t==='warn'?'warn':''}"><b>${f.b}</b>${f.m}</div>`).join('')}
-      <div class="cnote"><b>True for every plan</b>Anki daily. Review more than you answer. Ration AAMC full-lengths. Take the exam when your practice full-lengths sit stably at target — the date serves the score.</div>`;
+      <div class="cnote"><b>True for every plan</b>Anki daily. Review more than you answer. Ration AAMC full-lengths. Take the exam when your practice full-lengths sit stably at target — the date serves the score.</div>
+      <div class="genrow" style="margin-top:16px"><button class="btn ghost" onclick="toggleCal()">${customState.showCal?'Hide':'Show'} day-by-day calendar</button></div>
+      ${customState.showCal?renderCalendar(res.cal):''}`;
   }
   return `
      <div class="builder">
@@ -696,6 +784,59 @@ function renderResources(){
      <p class="schwho" style="margin-top:14px">The resources students most consistently recommend. You don't need all of them — one content set, the AAMC material, and a question bank is the real core; everything else is a supplement.</p>
      ${blocks}
      <div class="footnote">Recommendations reflect general community consensus, not medical or academic advice. Verify current editions before buying. Open MCAT is independent and not affiliated with the AAMC, UWorld, or any publisher.</div>
+   </div>`;
+}
+
+function renderAnalytics(){
+  const prog=getProgress();const st=getStats();const streak=getStreak();
+  const attempted=BANK.filter(q=>prog[q.id]);
+  const doneN=BANK.filter(q=>{const m=mastery(q.id);return m.done;}).length;
+  const acc=st.answered?Math.round(st.correct/st.answered*100):0;
+  if(!attempted.length){
+    document.getElementById('main').innerHTML=`
+     <div class="pane"><div class="h-row"><h1>Analytics</h1><span class="sub">performance</span></div>
+       <div class="cnote" style="margin-top:16px"><b>No data yet</b>Take a few quizzes and your accuracy, mastery by section, and weakest ideas will show up here. It updates automatically as you go.</div>
+       <div class="genrow" style="margin-top:14px"><button class="btn" onclick="go('list',null)">Go to the question bank →</button></div>
+     </div>`;return;
+  }
+  // by section (best-attempt mastery)
+  const bySec={};
+  attempted.forEach(q=>{const m=mastery(q.id);(bySec[q.sectionCode]=bySec[q.sectionCode]||{best:0,total:0,n:0});bySec[q.sectionCode].best+=m.best;bySec[q.sectionCode].total+=m.total;bySec[q.sectionCode].n++;});
+  const secOrder=['P/S','B/B','C/P','CARS'];
+  const secRows=secOrder.filter(c=>bySec[c]).map(c=>{const s=bySec[c];const pct=Math.round(s.best/s.total*100);const full=pct===100;
+    return `<tr><td><b>${c}</b></td><td class="qn">${s.n} idea${s.n>1?'s':''}</td>
+      <td><div class="mastery ${full?'full':''}"><span class="mt"><i style="width:${pct}%"></i></span><span class="pc">${pct}%</span></div></td></tr>`;}).join('');
+  // ideas ranked weakest first
+  const ranked=attempted.map(q=>({q,m:mastery(q.id),pr:prog[q.id]})).sort((a,b)=>a.m.pct-b.m.pct);
+  const ideaRows=ranked.map(({q,m,pr})=>{const last=pr.last!=null?Math.round(pr.last/m.total*100):null;const full=m.done;
+    return `<tr onclick="go('quiz','${q.id}')"><td><span class="code">${q.sectionCode} · ${q.categoryCode}</span></td>
+      <td><div class="idea">${q.idea}</div></td>
+      <td class="qn">${pr.attempts||1}×</td>
+      <td class="qn">${last!=null?last+'%':'—'}</td>
+      <td><div class="mastery ${full?'full':''}"><span class="mt"><i style="width:${m.pct}%"></i></span><span class="pc">${m.pct}%</span></div></td>
+      <td style="text-align:right"><span class="arw">›</span></td></tr>`;}).join('');
+  const weakest=ranked[0];
+  const notStarted=BANK.filter(q=>!prog[q.id]);
+  const focus=weakest&&weakest.m.pct<100?weakest.q:(notStarted[0]||null);
+  const focusNote=focus?(weakest&&weakest.m.pct<100&&focus===weakest.q
+      ?`Your lowest mastery is <b>${focus.idea}</b> (${weakest.m.pct}%). Re-drill it and seal the distinctions you keep missing.`
+      :`You've mastered what you've attempted — start a new idea: <b>${focus.idea}</b>.`):`You've completed every idea in the bank. Add new testable ideas to keep going.`;
+  document.getElementById('main').innerHTML=`
+   <div class="pane">
+     <div class="h-row"><h1>Analytics</h1><span class="sub">performance</span></div>
+     <div class="schmeta" style="margin-top:14px">
+       <div><span>overall accuracy</span><b>${acc}%</b></div>
+       <div><span>questions answered</span><b>${st.answered}</b></div>
+       <div><span>ideas mastered</span><b>${doneN}/${BANK.length}</b></div>
+       <div><span>streak</span><b>${streak.count}d</b></div>
+     </div>
+     <p class="schwho" style="margin-top:6px;font-size:12.5px;color:var(--text3)">Accuracy is cumulative across every attempt. Mastery bars use your best attempt per idea.</p>
+     <div class="cnote"><b>Focus next</b>${focusNote}${focus?` <button class="btn" style="margin-left:6px;padding:6px 14px;font-size:12px" onclick="go('quiz','${focus.id}')">Open →</button>`:''}</div>
+     <div class="h-row" style="margin-top:22px"><h1 style="font-size:16px">Mastery by section</h1></div>
+     <table class="ctbl"><tr><th>Section</th><th>Attempted</th><th style="width:150px">Mastery</th></tr>${secRows}</table>
+     <div class="h-row" style="margin-top:22px"><h1 style="font-size:16px">Ideas — weakest first</h1></div>
+     <table class="tbl"><thead><tr><th style="width:96px">Ref</th><th>Idea</th><th class="r" style="width:60px">Tries</th><th class="r" style="width:64px">Last</th><th class="r" style="width:130px">Mastery</th><th></th></tr></thead><tbody>${ideaRows}</tbody></table>
+     ${notStarted.length?`<p class="schwho" style="margin-top:16px;font-size:13px;color:var(--text3)">${notStarted.length} idea${notStarted.length>1?'s':''} not started yet.</p>`:''}
    </div>`;
 }
 
