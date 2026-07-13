@@ -288,6 +288,36 @@
   .errbox .hint{font-size:12.5px;color:var(--text3);margin-top:7px;}
   .datatools{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
   .datatools .btn{padding:8px 13px;font-size:12.5px;}
+  .minirow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0;}
+  .metric{border:1px solid var(--border);border-radius:8px;background:var(--panel);padding:12px 14px;}
+  .metric span{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);}
+  .metric b{display:block;font-size:21px;font-weight:600;margin-top:3px;}
+  .jfilters{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0;}
+  .jfilters button{font-family:var(--mono);font-size:11px;border:1px solid var(--border);border-radius:999px;background:var(--panel);color:var(--text2);padding:6px 11px;cursor:pointer;}
+  .jfilters button.on{background:var(--accent-bg);border-color:var(--accent);color:var(--text);}
+  .journalcard,.reviewcard,.maprow{border:1px solid var(--border);border-radius:10px;background:var(--panel);padding:15px 16px;margin-top:10px;}
+  .jtop,.reviewtop,.maptop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .jmeta,.reviewmeta,.mapmeta{font-family:var(--mono);font-size:11px;color:var(--text3);display:flex;gap:9px;flex-wrap:wrap;margin:4px 0 8px;}
+  .jstem{font-size:14.5px;color:var(--text);line-height:1.55;margin:7px 0;}
+  .jcols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+  .jnote{border:1px solid var(--border);border-radius:8px;background:var(--bg);padding:10px 11px;font-size:13px;color:var(--text2);line-height:1.5;}
+  .jnote b{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);margin-bottom:4px;}
+  .statuspill{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--border);border-radius:999px;padding:3px 7px;color:var(--text2);white-space:nowrap;}
+  .statuspill.hot{border-color:var(--no-bd);background:var(--no-bg);color:var(--no);}
+  .statuspill.due{border-color:rgba(226,170,70,.45);background:rgba(226,170,70,.12);color:#d99a2e;}
+  .statuspill.ok{border-color:var(--ok-bd);background:var(--ok-bg);color:var(--ok);}
+  .gradebar{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;}
+  .gradebar button{font-family:var(--mono);font-size:11px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text2);padding:7px 10px;cursor:pointer;}
+  .gradebar button:hover{border-color:var(--accent);color:var(--text);}
+  .maprow{display:grid;grid-template-columns:1fr 120px 120px 120px;gap:12px;align-items:center;}
+  .maprow button{justify-self:end;}
+  .maprow .mastery{display:flex;align-items:center;gap:8px;}
+  .maprow .mastery .mt{width:64px;height:5px;background:var(--track);border-radius:3px;overflow:hidden;}
+  .maprow .mastery .mt i{display:block;height:100%;background:var(--accent);border-radius:3px;}
+  .maprow .mastery.full .mt i{background:var(--ok);}
+  .maprow .mastery .pc{font-family:var(--mono);font-size:11px;color:var(--text2);width:34px;text-align:right;}
+  .state{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--text2);}
+  @media (max-width:760px){.minirow{grid-template-columns:1fr 1fr}.jcols{grid-template-columns:1fr}.maprow{grid-template-columns:1fr}.maprow button{justify-self:start}}
 
   /* schedules + anki content */
   .tabs{display:flex;gap:2px;background:var(--raise);border:1px solid var(--border);border-radius:9px;
@@ -2649,6 +2679,83 @@ function importProgressPrompt(){
   input.click();
 }
 window.importProgressPrompt=importProgressPrompt;
+
+function splitQuestionId(id){const s=String(id||'');const i=s.indexOf('::');return i<0?{ideaId:s,tag:''}:{ideaId:s.slice(0,i),tag:s.slice(i+2)};}
+function findQuestionRef(questionId){
+  const p=splitQuestionId(questionId),idea=BANK_BY_ID.get(p.ideaId);
+  if(!idea)return null;
+  const q=(idea.questions||[]).find(x=>x.tag===p.tag)||idea.questions[0];
+  return q?{idea,item:q,ideaId:p.ideaId,tag:p.tag}:null;
+}
+function questionPoolFromIds(ids){
+  const seen=new Set(),pool=[];
+  ids.forEach(id=>{if(seen.has(id))return;seen.add(id);const ref=findQuestionRef(id);if(!ref)return;
+    pool.push({...ref.item,_code:ref.idea.categoryCode,_cat:ref.idea.category,_idea:ref.idea.idea,_sec:ref.idea.sectionCode,_id:ref.idea.id});
+  });
+  return pool;
+}
+function startQuestionPool(title,ids){
+  const pool=questionPoolFromIds(ids);
+  if(!pool.length)return;
+  state.quiz={id:'__focused',mixed:true,focused:true,idea:title,sectionCode:'FOCUS',category:title,categoryCode:'→',questions:pool};
+  state.i=0;state.score=0;state.picked=null;state.locked=false;state.res=[];state.snap=[];state.view='quiz';document.querySelector('.main').scrollTo(0,0);paint();
+}
+window.startQuestionPool=startQuestionPool;
+window.startSingleQuestion=function(questionId){startQuestionPool('Retry review',[questionId]);};
+function latestAttempts(){
+  return (getLearning().attempts||[]).slice().sort((a,b)=>b.timestamp-a.timestamp);
+}
+function reviewItems(){return Learner.reviewItems(getLearning());}
+function reviewStatusForQuestion(id){
+  const item=reviewItems().find(x=>x.questionId===id);
+  if(!item)return {label:'No review queued',cls:''};
+  if(item.status==='due')return {label:item.overdueMs>0?'Overdue':'Due now',cls:'due'};
+  if(item.status==='today')return {label:'Due today',cls:'due'};
+  return {label:'Upcoming',cls:''};
+}
+function dateShort(ts){return ts?new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';}
+function dateTimeShort(ts){return ts?new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'—';}
+function dueLabel(ts){
+  if(!ts)return 'No date';
+  const diff=ts-Date.now(),d=Math.round(diff/86400000);
+  if(diff<0)return `${Math.ceil(Math.abs(diff)/86400000)||1}d overdue`;
+  if(d<=0)return 'today';
+  if(d===1)return 'tomorrow';
+  return `${d}d`;
+}
+function attemptRef(a){return findQuestionRef(a.questionId);}
+function attemptStem(a){const ref=attemptRef(a);return (a.snapshot&&a.snapshot.stem)||(ref&&ref.item.stem)||'Question text unavailable';}
+function attemptTakeaway(a){const ref=attemptRef(a);return (a.snapshot&&a.snapshot.takeaway)||(ref&&ref.item.takeaway)||'';}
+function attemptRationale(a){const ref=attemptRef(a);return (a.snapshot&&a.snapshot.rationale)||(ref&&ref.item.rationale)||'';}
+function attemptWhy(a){
+  if(a.snapshot&&Array.isArray(a.snapshot.why)&&a.snapshot.why.length)return a.snapshot.why;
+  const ref=attemptRef(a);return ref&&Array.isArray(ref.item.why)?ref.item.why:[];
+}
+function selectedText(a){return (a.snapshot&&a.snapshot.selectedText)||`Choice ${'ABCD'[a.selectedAnswer]||'?'}`;}
+function correctText(a){return (a.snapshot&&a.snapshot.correctText)||`Choice ${'ABCD'[a.correctAnswer]||'?'}`;}
+function conceptList(a){return (a.conceptTags||[]).slice(0,4).join(', ')||a.testableIdea||'—';}
+function journalEntries(){
+  return latestAttempts().filter(a=>!a.correct||a.confidence==='guess'||a.confidence==='no-idea'||(a.changedAnswer&&a.originalSelectedAnswer===a.correctAnswer));
+}
+function ideaAttempts(id){return attemptsByIdea()[id]||[];}
+function ideaMetrics(idea){
+  const atts=ideaAttempts(idea.id),m=mastery(idea.id),n=atts.length;
+  const correct=atts.filter(a=>a.correct).length;
+  const acc=n?Math.round(correct/n*100):null;
+  const avg=n?Math.round(atts.reduce((s,a)=>s+(a.responseTimeMs||0),0)/n):0;
+  const conf=atts.filter(a=>a.confidence==='confident');
+  const confAcc=conf.length?Math.round(conf.filter(a=>a.correct).length/conf.length*100):null;
+  const highMiss=atts.filter(a=>!a.correct&&a.confidence==='confident').length;
+  const burden=atts.filter(a=>!a.correct).length+atts.filter(a=>a.correct&&(a.confidence==='guess'||a.confidence==='no-idea')).length*0.5+highMiss;
+  const latest=atts.slice().sort((a,b)=>b.timestamp-a.timestamp)[0];
+  const due=reviewItems().filter(r=>r.questionId.startsWith(idea.id+'::')).sort((a,b)=>a.dueAt-b.dueAt)[0];
+  const half=Math.ceil(n/2),early=atts.slice(0,half),late=atts.slice(half);
+  const pct=arr=>arr.length?arr.filter(a=>a.correct).length/arr.length:null;
+  const e=pct(early),l=pct(late);
+  const trend=n<4?'Not enough data':(l>e+.15?'Improving':(l<e-.15?'Declining':'Stable'));
+  const readiness=due&&due.status==='due'?'Due for review':m.label;
+  return {attempts:n,accuracy:acc,avgTime:avg,confidenceAccuracy:confAcc,errorBurden:burden,last:latest&&latest.timestamp,nextReview:due&&due.dueAt,trend,readiness,mastery:m};
+}
 /* interleaved practice: draw questions across ideas (optionally within the active section) and shuffle */
 function cmpCode(a,b){
   const pa=parseInt(a,10), pb=parseInt(b,10);
@@ -2767,7 +2874,7 @@ window.toggleTheme=toggleTheme;
 setTheme(getTheme());
 
 /* ==================== state / router ==================== */
-let state={view:'list',section:null,cats:[],hyonly:false,sort:'code',search:'',quiz:null,i:0,score:0,picked:null,originalPicked:null,locked:false,confidence:'somewhat',qStartedAt:0,currentAttemptId:null,res:[],snap:[],open:{"P/S":true},drill:{filter:'all',cur:null,answered:false,correct:false,val:'',score:{correct:0,total:0}}};
+let state={view:'list',section:null,cats:[],hyonly:false,sort:'code',search:'',journalFilter:'all',mapSection:null,quiz:null,i:0,score:0,picked:null,originalPicked:null,locked:false,confidence:'somewhat',qStartedAt:0,currentAttemptId:null,res:[],snap:[],open:{"P/S":true},drill:{filter:'all',cur:null,answered:false,correct:false,val:'',score:{correct:0,total:0}}};
 function go(view,arg){
   if(view==='quiz'){state.quiz=BANK.find(q=>q.id===arg);state.i=0;state.score=0;state.picked=null;state.locked=false;state.res=[];state.snap=[];}
   if(view==='list'&&arg!==undefined)state.section=arg;
@@ -2827,6 +2934,9 @@ function renderSide(){
       <button class="footlink ${state.view==='sched'?'active':''}" onclick="go('sched')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Schedules</button>
       <button class="footlink ${state.view==='anki'?'active':''}" onclick="go('anki')"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 4v16"/></svg>Anki decks</button>
       <button class="footlink ${state.view==='res'?'active':''}" onclick="go('res')"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h13v18H6a2 2 0 01-2-2z"/><path d="M19 3v18"/></svg>Books &amp; resources</button>
+      <button class="footlink ${state.view==='journal'?'active':''}" onclick="go('journal')"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Error journal</button>
+      <button class="footlink ${state.view==='review'?'active':''}" onclick="go('review')"><svg viewBox="0 0 24 24"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/></svg>Due review</button>
+      <button class="footlink ${state.view==='map'?'active':''}" onclick="go('map')"><svg viewBox="0 0 24 24"><path d="M4 6h5v5H4zM15 4h5v5h-5zM15 15h5v5h-5zM9 8l6-1M9 10l6 7"/></svg>Weakness map</button>
       <button class="footlink ${state.view==='stats'?'active':''}" onclick="go('stats')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M4 20h16"/></svg>Analytics</button>
       <div class="statline"><span>Done <b>${doneN}/${BANK.length}</b></span><span>Streak <b>${streak.count}d</b></span></div>
       ${doneN?`<div style="padding:2px 10px 6px"><button class="reset" onclick="resetProgress()">Reset progress</button></div>`:''}
@@ -2850,6 +2960,9 @@ function renderTop(){
   else if(state.view==='sched')crumb=`<b>Study schedules</b>`;
   else if(state.view==='anki')crumb=`<b>Anki decks</b>`;
   else if(state.view==='res')crumb=`<b>Books &amp; resources</b>`;
+  else if(state.view==='journal')crumb=`<b>Error journal</b>`;
+  else if(state.view==='review')crumb=`<b>Due review</b>`;
+  else if(state.view==='map')crumb=`<b>Weakness map</b>`;
   else if(state.view==='stats')crumb=`<b>Analytics</b>`;
   else if(state.view==='drill')crumb=`<b>Formula drills</b>`;
   const th=getTheme();
@@ -2876,6 +2989,9 @@ function renderMain(){
   if(state.view==='sched')return renderSchedules();
   if(state.view==='anki')return renderAnki();
   if(state.view==='res')return renderResources();
+  if(state.view==='journal')return renderJournal();
+  if(state.view==='review')return renderReview();
+  if(state.view==='map')return renderWeaknessMap();
   if(state.view==='stats')return renderAnalytics();
   if(state.view==='drill')return renderDrill();
 }
@@ -3060,6 +3176,11 @@ window.doSubmit=function(){
       <select id="errclass" onchange="updateAttemptError(this.value)">${errOptions}</select>
       <div class="hint">This is a suggested classification, not a certainty. Edit it if a different mistake type fits better.</div>
     </div>`:'';
+  const reviewGradeHTML=q.review&&attempt?`<div class="errbox" id="reviewgrade">
+      <label>Review outcome</label>
+      <div class="gradebar"><button onclick="gradeReviewOutcome('again')">Again</button><button onclick="gradeReviewOutcome('hard')">Hard</button><button onclick="gradeReviewOutcome('good')">Good</button><button onclick="gradeReviewOutcome('easy')">Easy</button></div>
+      <div class="hint">Use this to schedule when the concept returns. Again and Hard come back sooner.</div>
+    </div>`:'';
   const learnHTML=attempt?`<div class="learnmeta"><span>Confidence: ${CONF_LABELS[attempt.confidence]}</span><span>Time: ${fmtMs(attempt.responseTimeMs)}</span>${attempt.changedAnswer?`<span>Changed answer: ${'ABCD'[attempt.originalSelectedAnswer]} → ${'ABCD'[attempt.selectedAnswer]}</span>`:''}</div>`:'';
   const exp=document.getElementById('exp');
   exp.innerHTML=`
@@ -3067,7 +3188,7 @@ window.doSubmit=function(){
     ${learnHTML}
     <p>${item.rationale}</p><h4>Why each choice</h4>
     ${item.why.map((w,x)=>`<div class="why ${x===correct?'r':(x===state.picked&&!right?'w':'')}"><b>${'ABCD'[x]}.</b> ${w}</div>`).join('')}
-    <div class="takeaway"><b>Bank this</b>${item.takeaway}</div>${errHTML}${relHTML}`;
+    <div class="takeaway"><b>Bank this</b>${item.takeaway}</div>${errHTML}${reviewGradeHTML}${relHTML}`;
   exp.classList.add('show');
   const btn=document.getElementById('submit');btn.textContent=last?'Finish':'Next';btn.disabled=false;btn.setAttribute('onclick','doNext()');btn.focus();
   document.querySelector('.khint').innerHTML=`<span><kbd>⏎</kbd> ${last?'finish':'next'}</span><span><kbd>F</kbd> flag</span><span><kbd>esc</kbd> back</span>`;
@@ -3347,6 +3468,124 @@ function renderResources(){
    </div>`;
 }
 
+window.setJournalFilter=function(f){state.journalFilter=f;renderMain();};
+window.retryAttempt=function(questionId){const p=splitQuestionId(questionId);go('quiz',p.ideaId);};
+window.practiceRelatedFromAttempt=function(questionId){const ref=findQuestionRef(questionId);if(!ref)return;startQuestionPool('Related practice',relatedIdeas(ref.idea.categoryCode,ref.idea.id).map(r=>r.id+'::'+(r.questions[0]&&r.questions[0].tag||'')));};
+function renderJournal(){
+  const all=journalEntries();
+  const items=all.filter(a=>{
+    const st=reviewStatusForQuestion(a.questionId);
+    if(state.journalFilter==='misconceptions')return !a.correct&&a.confidence==='confident';
+    if(state.journalFilter==='guesses')return a.correct&&(a.confidence==='guess'||a.confidence==='no-idea');
+    if(state.journalFilter==='timing')return a.errorClassification==='timing-rushing'||a.responseTimeMs>120000;
+    if(state.journalFilter==='due')return st.cls==='due';
+    return true;
+  });
+  const high=all.filter(a=>!a.correct&&a.confidence==='confident').length;
+  const guesses=all.filter(a=>a.correct&&(a.confidence==='guess'||a.confidence==='no-idea')).length;
+  const due=all.filter(a=>reviewStatusForQuestion(a.questionId).cls==='due').length;
+  const errCounts={};all.forEach(a=>{if(a.errorClassification)errCounts[a.errorClassification]=(errCounts[a.errorClassification]||0)+1;});
+  const common=Object.entries(errCounts).sort((a,b)=>b[1]-a[1])[0];
+  const filterBtn=(f,l)=>`<button class="${state.journalFilter===f?'on':''}" onclick="setJournalFilter('${f}')">${l}</button>`;
+  const cards=items.slice(0,50).map(a=>{
+    const ref=attemptRef(a),st=reviewStatusForQuestion(a.questionId),why=attemptWhy(a);
+    const tempting=why[a.selectedAnswer]||'The selected answer was tempting enough to choose; refine this after review if the automatic note misses the real reason.';
+    const risk=!a.correct&&a.confidence==='confident'?'A confident miss may indicate a misconception rather than simple forgetting.':(a.correct?'This was correct, but low confidence means it should still be retrievable later.':'This likely reflects a gap, trap, or reasoning slip worth retesting.');
+    return `<article class="journalcard">
+      <div class="jtop"><div><span class="code">${a.section} · ${ref?ref.idea.categoryCode:''}</span><div class="idea" style="margin-top:7px">${a.testableIdea||ref&&ref.idea.idea||'Question'}</div></div><span class="statuspill ${st.cls}">${st.label}</span></div>
+      <div class="jmeta"><span>${dateTimeShort(a.timestamp)}</span><span>${CONF_LABELS[a.confidence]}</span><span>${fmtMs(a.responseTimeMs)}</span><span>${ERROR_LABELS[a.errorClassification]||'No category'}</span></div>
+      <div class="jstem">${attemptStem(a)}</div>
+      <div class="jcols">
+        <div class="jnote"><b>Selected</b>${selectedText(a)}</div>
+        <div class="jnote"><b>Correct</b>${correctText(a)}</div>
+        <div class="jnote"><b>Why tempting</b>${tempting}</div>
+        <div class="jnote"><b>May indicate</b>${risk}</div>
+        <div class="jnote"><b>Correct reasoning</b>${attemptRationale(a)}</div>
+        <div class="jnote"><b>Bank this</b>${attemptTakeaway(a)||'No Bank this rule found.'}</div>
+      </div>
+      <div class="jmeta"><span>Concepts: ${escHtml(conceptList(a))}</span></div>
+      <div class="datatools"><button class="btn ghost" data-q="${escHtml(a.questionId)}" onclick="retryAttempt(this.dataset.q)">Retry question</button><button class="btn ghost" data-q="${escHtml(a.questionId)}" onclick="practiceRelatedFromAttempt(this.dataset.q)">Practice related</button></div>
+    </article>`;
+  }).join('');
+  document.getElementById('main').innerHTML=`
+   <div class="pane">
+     <div class="h-row"><h1>Error journal</h1><span class="sub">${items.length}/${all.length} entries</span></div>
+     <p class="schwho" style="margin-top:8px">Generated from your attempt history. Automatic categories are suggestions, so treat them as a starting point for review.</p>
+     <div class="minirow"><div class="metric"><span>high-confidence misses</span><b>${high}</b></div><div class="metric"><span>correct guesses</span><b>${guesses}</b></div><div class="metric"><span>due/overdue</span><b>${due}</b></div><div class="metric"><span>most common</span><b style="font-size:14px">${common?ERROR_LABELS[common[0]]:'—'}</b></div></div>
+     <div class="jfilters">${filterBtn('all','All')}${filterBtn('misconceptions','High-confidence misses')}${filterBtn('guesses','Correct guesses')}${filterBtn('due','Due review')}${filterBtn('timing','Timing')}</div>
+     ${cards||`<div class="cnote"><b>No entries yet</b>Missed questions, correct guesses, and changed-from-correct attempts will appear here automatically.</div>`}
+   </div>`;
+}
+
+window.startReviewSession=function(scope){
+  const items=reviewItems();
+  let selected=items.filter(x=>scope==='all'||x.status==='due'||x.status==='today');
+  if(scope==='overdue')selected=items.filter(x=>x.status==='due');
+  if(!selected.length)selected=items.slice(0,10);
+  const ids=selected.slice(0,10).map(x=>x.questionId);
+  const pool=questionPoolFromIds(ids);if(!pool.length)return;
+  state.quiz={id:'__review',mixed:true,review:true,idea:'Due review',sectionCode:'REVIEW',category:'Spaced review',categoryCode:'↻',questions:pool};
+  state.i=0;state.score=0;state.picked=null;state.locked=false;state.res=[];state.snap=[];state.view='quiz';document.querySelector('.main').scrollTo(0,0);paint();
+};
+window.gradeReviewOutcome=function(outcome){
+  if(!state.currentAttemptId||!state.cur)return;
+  const id=Learner.questionIdentity(state.quiz,state.cur);
+  const result=Learner.gradeReview(localStorage,id,outcome);
+  invalidateProgressCaches();
+  const box=document.getElementById('reviewgrade');
+  if(box&&result.ok)box.innerHTML=`<span class="statuspill ok">Scheduled ${dueLabel(result.review.dueAt)}</span>`;
+};
+function renderReview(){
+  const items=reviewItems();
+  const due=items.filter(x=>x.status==='due'),today=items.filter(x=>x.status==='today'),upcoming=items.filter(x=>x.status==='upcoming');
+  const mastered=Object.values(getLearning().questionReviews||{}).filter(r=>r.state==='mastered'&&r.lastReviewedAt>Date.now()-7*86400000);
+  const rows=items.slice(0,40).map(x=>{
+    const ref=findQuestionRef(x.questionId),latest=x.latest,hot=latest&&!latest.correct&&latest.confidence==='confident';
+    return `<div class="reviewcard">
+      <div class="reviewtop"><div><span class="code">${latest?latest.section:(ref&&ref.idea.sectionCode)||''} · ${ref?ref.idea.categoryCode:''}</span><div class="idea" style="margin-top:7px">${latest?latest.testableIdea:(ref&&ref.idea.idea)||'Review item'}</div></div><span class="statuspill ${x.status==='due'?'due':''}">${dueLabel(x.dueAt)}</span></div>
+      <div class="reviewmeta"><span>${x.review.reason||'Review queued'}</span>${latest?`<span>${CONF_LABELS[latest.confidence]}</span><span>${latest.correct?'Correct':'Incorrect'}</span>`:''}${hot?'<span>Misconception risk</span>':''}</div>
+      <div class="datatools"><button class="btn ghost" data-q="${escHtml(x.questionId)}" onclick="startSingleQuestion(this.dataset.q)">Retry</button><button class="btn ghost" data-q="${escHtml(x.questionId)}" onclick="retryAttempt(this.dataset.q)">Open idea</button></div>
+    </div>`;
+  }).join('');
+  document.getElementById('main').innerHTML=`
+   <div class="pane">
+     <div class="h-row"><h1>Due review</h1><span class="sub">local spaced review</span></div>
+     <p class="schwho" style="margin-top:8px">Misses and correct guesses enter review automatically. High-confidence misses return sooner because they may represent misconceptions.</p>
+     <div class="minirow"><div class="metric"><span>due now</span><b>${due.length}</b></div><div class="metric"><span>due today</span><b>${today.length}</b></div><div class="metric"><span>upcoming</span><b>${upcoming.length}</b></div><div class="metric"><span>recently mastered</span><b>${mastered.length}</b></div></div>
+     <div class="cnote"><b>Estimated workload</b>${due.length+today.length?`About ${Math.max(5,Math.round((due.length+today.length)*1.5))} minutes for due items.`:'Nothing urgent. Keep practicing or preview upcoming review.'}</div>
+     <div class="datatools"><button class="btn" onclick="startReviewSession('due')" ${due.length||today.length?'':'disabled'}>Start due review</button><button class="btn ghost" onclick="startReviewSession('all')" ${items.length?'':'disabled'}>Review all queued</button></div>
+     ${rows||`<div class="cnote"><b>No review items</b>Miss a question or mark a low-confidence correct answer and it will appear here.</div>`}
+   </div>`;
+}
+
+window.setMapSection=function(s){state.mapSection=s||null;renderMain();};
+window.startIdeaMisses=function(id){
+  const ids=ideaAttempts(id).filter(a=>!a.correct||a.confidence==='guess'||a.confidence==='no-idea').map(a=>a.questionId);
+  if(ids.length)startQuestionPool('Focused repair',ids);else go('quiz',id);
+};
+function renderWeaknessMap(){
+  const rows=BANK.filter(q=>!state.mapSection||q.sectionCode===state.mapSection).map(q=>({q,met:ideaMetrics(q)})).sort((a,b)=>a.met.mastery.pct-b.met.mastery.pct||b.met.errorBurden-a.met.errorBurden);
+  const attempted=rows.filter(x=>x.met.attempts);
+  const weak=rows.filter(x=>x.met.readiness==='Misconception risk'||x.met.mastery.pct<60&&x.met.attempts).length;
+  const due=rows.filter(x=>x.met.readiness==='Due for review').length;
+  const secBtn=(s,l)=>`<button class="${state.mapSection===s?'on':''}" onclick="setMapSection(${s?`'${s}'`:'null'})">${l}</button>`;
+  const body=rows.slice(0,80).map(({q,met})=>`
+    <div class="maprow">
+      <div><span class="code">${q.sectionCode} · ${q.categoryCode}</span><div class="idea" style="margin-top:6px">${q.idea}</div><div class="mapmeta"><span>${q.category}</span><span>${met.trend}</span><span>${met.last?'Last '+dateShort(met.last):'Unseen'}</span></div></div>
+      <div><span class="state">${met.readiness}</span><div class="mastery ${met.mastery.done?'full':''}" style="justify-content:flex-start;margin-top:6px"><span class="mt"><i style="width:${met.mastery.pct}%"></i></span><span class="pc">${met.mastery.pct}%</span></div></div>
+      <div class="mapmeta" style="display:block"><span>Acc ${met.accuracy==null?'—':met.accuracy+'%'}</span><br><span>Conf ${met.confidenceAccuracy==null?'—':met.confidenceAccuracy+'%'}</span><br><span>Time ${met.avgTime?fmtMs(met.avgTime):'—'}</span><br><span>Next ${met.nextReview?dueLabel(met.nextReview):'—'}</span><br><span>${met.attempts} tries · burden ${met.errorBurden}</span></div>
+      <div class="datatools" style="margin:0"><button class="btn ghost" onclick="go('quiz','${q.id}')">Open</button><button class="btn ghost" onclick="startIdeaMisses('${q.id}')">Repair</button></div>
+    </div>`).join('');
+  document.getElementById('main').innerHTML=`
+   <div class="pane">
+     <div class="h-row"><h1>Weakness map</h1><span class="sub">AAMC hierarchy</span></div>
+     <p class="schwho" style="margin-top:8px">A testable-idea map using mastery, accuracy, confidence, timing, error burden, trend, and next review. Labels make the status readable without relying only on color.</p>
+     <div class="minirow"><div class="metric"><span>attempted ideas</span><b>${attempted.length}</b></div><div class="metric"><span>weak/risky</span><b>${weak}</b></div><div class="metric"><span>due review</span><b>${due}</b></div><div class="metric"><span>unseen</span><b>${rows.length-attempted.length}</b></div></div>
+     <div class="jfilters">${secBtn(null,'All')}${secBtn('P/S','P/S')}${secBtn('B/B','B/B')}${secBtn('C/P','C/P')}</div>
+     ${body}
+   </div>`;
+}
+
 function renderAnalytics(){
   const prog=getProgress();const st=getStats();const streak=getStreak();
   const attempted=BANK.filter(q=>prog[q.id]||mastery(q.id).attempts);
@@ -3421,9 +3660,9 @@ document.addEventListener('keydown',e=>{
   if(state.view==='drill'&&e.key==='Enter'&&state.drill.answered&&!typing){e.preventDefault();window.nextDrill();return;}
 });
 
-/* deep-link support: app.html#resources / #schedules / #anki / #drills */
+/* deep-link support: app.html#resources / #schedules / #anki / #drills / #journal / #review / #map */
 (function(){const h=(location.hash||'').replace('#','').toLowerCase();
-  const map={resources:'res',books:'res',schedules:'sched',sched:'sched',anki:'anki',drills:'drill',drill:'drill',calc:'drill'};
+  const map={resources:'res',books:'res',schedules:'sched',sched:'sched',anki:'anki',drills:'drill',drill:'drill',calc:'drill',journal:'journal',errors:'journal',review:'review',map:'map',weakness:'map'};
   if(map[h])state.view=map[h];})();
 
 paint();

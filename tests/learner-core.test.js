@@ -42,6 +42,8 @@ function testAttemptSchemaCapturesConfidenceTimingAndChange(){
   assert.strictEqual(attempt.originalSelectedAnswer,1);
   assert.strictEqual(attempt.dueReviewStatus,'due');
   assert.ok(attempt.errorClassification);
+  assert.strictEqual(attempt.snapshot.selectedText,'Interposition');
+  assert.strictEqual(attempt.snapshot.correctText,'Retinal disparity');
 }
 
 function testMasteryWeightsConfidenceAndMisconceptions(){
@@ -76,10 +78,27 @@ function testImportExportRoundTrip(){
   assert.strictEqual(Learner.importState(next,JSON.stringify({hello:'world'})).ok,false);
 }
 
+function testReviewQueueAndGrading(){
+  const storage=new MemoryStorage();
+  const now=Date.now();
+  const miss=Learner.buildAttempt(sampleCtx({selectedAnswer:0,correctAnswer:1,confidence:'confident',startedAt:now-20000,submittedAt:now}));
+  Learner.recordAttempt(storage,miss);
+  const state=Learner.loadState(storage);
+  const items=Learner.reviewItems(state,now+12*60*60*1000+1);
+  assert.strictEqual(items.length,1);
+  assert.strictEqual(items[0].status,'due');
+  assert.strictEqual(items[0].review.reason,'High-confidence miss');
+  const graded=Learner.gradeReview(storage,miss.questionId,'easy',now+13*60*60*1000);
+  assert.strictEqual(graded.ok,true);
+  assert.strictEqual(graded.review.state,'mastered');
+  assert.ok(graded.review.dueAt>now);
+}
+
 testMigrationPreservesLegacySummary();
 testMalformedStateRecoversWithoutDeletingLegacy();
 testAttemptSchemaCapturesConfidenceTimingAndChange();
 testMasteryWeightsConfidenceAndMisconceptions();
 testImportExportRoundTrip();
+testReviewQueueAndGrading();
 
 console.log('learner-core tests passed');

@@ -123,7 +123,17 @@
       errorClassification:ERROR_CATEGORIES.includes(a.errorClassification)?a.errorClassification:null,
       errorClassificationSuggested:!!a.errorClassificationSuggested,
       dueReviewStatus:a.dueReviewStatus||'none',
-      questionVersion:a.questionVersion||1
+      questionVersion:a.questionVersion||1,
+      snapshot:a.snapshot&&typeof a.snapshot==='object'?{
+        tag:a.snapshot.tag||'',
+        stem:a.snapshot.stem||'',
+        choices:Array.isArray(a.snapshot.choices)?a.snapshot.choices.map(String):[],
+        correctText:a.snapshot.correctText||'',
+        selectedText:a.snapshot.selectedText||'',
+        rationale:a.snapshot.rationale||'',
+        why:Array.isArray(a.snapshot.why)?a.snapshot.why.map(String):[],
+        takeaway:a.snapshot.takeaway||''
+      }:null
     };
   }
   function questionIdentity(quiz,item){
@@ -180,18 +190,63 @@
       prerequisiteConceptTags:splitTags(item.prerequisiteConcepts),
       difficulty:item.difficulty||'medium',
       dueReviewStatus:correct?'none':'due',
-      questionVersion:item.version||1
+      questionVersion:item.version||1,
+      snapshot:{
+        tag:item.tag||'',
+        stem:item.stem||'',
+        choices:Array.isArray(item.choices)?item.choices.slice():[],
+        correctText:Array.isArray(item.choices)?item.choices[ctx.correctAnswer]||'':'',
+        selectedText:Array.isArray(item.choices)?item.choices[ctx.selectedAnswer]||'':'',
+        rationale:item.rationale||'',
+        why:Array.isArray(item.why)?item.why.slice():[],
+        takeaway:item.takeaway||''
+      }
     });
     attempt.errorClassification=ctx.errorClassification||suggestErrorClassification({...attempt,item});
     attempt.errorClassificationSuggested=!!attempt.errorClassification&&!ctx.errorClassification;
     return attempt;
   }
+  function reviewReasonForAttempt(a){
+    if(!a.correct&&a.confidence==='confident')return 'High-confidence miss';
+    if(!a.correct)return 'Missed question';
+    if(a.correct&&(a.confidence==='guess'||a.confidence==='no-idea'))return 'Correct guess';
+    if(a.changedAnswer&&a.originalSelectedAnswer===a.correctAnswer&&!a.correct)return 'Changed from correct';
+    return '';
+  }
+  function reviewDelay(outcome,a){
+    const highRisk=a&&!a.correct&&a.confidence==='confident';
+    const map={again:highRisk?MS_DAY/2:MS_DAY,hard:highRisk?MS_DAY:2*MS_DAY,good:4*MS_DAY,easy:10*MS_DAY};
+    return map[outcome]||map.good;
+  }
+  function shouldEnterReview(a){
+    return !!a&&(!a.correct||a.confidence==='guess'||a.confidence==='no-idea'||(a.changedAnswer&&a.originalSelectedAnswer===a.correctAnswer&&!a.correct));
+  }
+  function scheduleReviewFromAttempt(state,attempt,asOf){
+    if(!shouldEnterReview(attempt))return state;
+    const ts=asOf||attempt.timestamp||now();
+    const prior=(state.questionReviews&&state.questionReviews[attempt.questionId])||{};
+    const sooner=attempt.correct?3*MS_DAY:(attempt.confidence==='confident'?MS_DAY/2:MS_DAY);
+    state.questionReviews=state.questionReviews||{};
+    state.questionReviews[attempt.questionId]=Object.assign({},prior,{
+      questionId:attempt.questionId,
+      dueAt:ts+sooner,
+      lastAttemptAt:attempt.timestamp,
+      lastAttemptId:attempt.attemptId,
+      reason:reviewReasonForAttempt(attempt),
+      state:'learning',
+      outcome:prior.outcome||null,
+      updatedAt:ts
+    });
+    return state;
+  }
   function recordAttempt(storage,attempt){
     if(!validateAttempt(attempt))return {ok:false,error:'Invalid attempt.'};
     const state=loadState(storage);
-    state.attempts.push(normalizeAttempt(attempt));
+    const normalized=normalizeAttempt(attempt);
+    state.attempts.push(normalized);
+    scheduleReviewFromAttempt(state,normalized);
     saveState(storage,state);
-    return {ok:true,state,attempt:normalizeAttempt(attempt)};
+    return {ok:true,state,attempt:normalized};
   }
   function updateAttempt(storage,attemptId,patch){
     const state=loadState(storage);
@@ -200,6 +255,43 @@
     state.attempts[idx]=normalizeAttempt(Object.assign({},state.attempts[idx],patch));
     saveState(storage,state);
     return {ok:true,attempt:state.attempts[idx],state};
+  }
+  function gradeReview(storage,questionId,outcome,asOf){
+    if(!['again','hard','good','easy'].includes(outcome))return {ok:false,error:'Unsupported review outcome.'};
+    const state=loadState(storage);
+    const latest=(state.attempts||[]).filter(a=>a.questionId===questionId).sort((a,b)=>b.timestamp-a.timestamp)[0]||null;
+    const ts=asOf||now();
+    state.questionReviews=state.questionReviews||{};
+    const prior=state.questionReviews[questionId]||{questionId};
+    const dueAt=ts+reviewDelay(outcome,latest);
+    state.questionReviews[questionId]=Object.assign({},prior,{questionId,outcome,dueAt,lastReviewedAt:ts,state:outcome==='easy'?'mastered':'learning',updatedAt:ts,reason:prior.reason||reviewReasonForAttempt(latest)});
+    saveState(storage,state);
+    return {ok:true,review:state.questionReviews[questionId],state};
+  }
+  function reviewItems(state,asOf){
+    const ts=asOf||now();
+    const byQ={};
+    (state.attempts||[]).map(normalizeAttempt).forEach(a=>{
+      if(!byQ[a.questionId]||a.timestamp>byQ[a.questionId].timestamp)byQ[a.questionId]=a;
+    });
+    Object.values(byQ).forEach(a=>{
+      if(shouldEnterReview(a)&&!(state.questionReviews||{})[a.questionId]){
+        const fake={questionId:a.questionId,dueAt:a.timestamp+(a.correct?3*MS_DAY:MS_DAY),lastAttemptAt:a.timestamp,lastAttemptId:a.attemptId,reason:reviewReasonForAttempt(a),state:'learning',updatedAt:a.timestamp};
+        byQ[a.questionId]._review=fake;
+      }
+    });
+    const ids=new Set([].concat(Object.keys(state.questionReviews||{}),Object.keys(byQ)));
+    return [...ids].map(id=>{
+      const latest=byQ[id]||null;
+      const review=(state.questionReviews&&state.questionReviews[id])||(latest&&latest._review)||null;
+      if(!review)return null;
+      const dueAt=Number(review.dueAt)||0;
+      const status=dueAt<=ts?'due':(dueAt<=ts+MS_DAY?'today':'upcoming');
+      return {questionId:id,dueAt,status,overdueMs:Math.max(0,ts-dueAt),review,latest};
+    }).filter(Boolean).sort((a,b)=>{
+      if(a.status!==b.status)return a.status==='due'?-1:b.status==='due'?1:a.status==='today'?-1:1;
+      return a.dueAt-b.dueAt;
+    });
   }
   function confidenceWeight(confidence){
     return ({'confident':1,'somewhat':0.7,'guess':0.25,'no-idea':0}[confidence]??0.5);
@@ -282,7 +374,7 @@
     const attempts=state.attempts||[];
     return {answered:attempts.length,correct:attempts.filter(a=>a.correct).length};
   }
-  const api={SCHEMA_VERSION,STORAGE_KEY,LEGACY_PROGRESS_KEY,LEGACY_STATS_KEY,CONFIDENCE_LEVELS,ERROR_CATEGORIES,createEmptyState,loadState,saveState,resetState,exportState,importState,validateAttempt,normalizeAttempt,buildAttempt,recordAttempt,updateAttempt,masteryFromAttempts,attemptsForIdea,legacyProgressFromAttempts,summarizeStats,suggestErrorClassification,questionIdentity};
+  const api={SCHEMA_VERSION,STORAGE_KEY,LEGACY_PROGRESS_KEY,LEGACY_STATS_KEY,CONFIDENCE_LEVELS,ERROR_CATEGORIES,createEmptyState,loadState,saveState,resetState,exportState,importState,validateAttempt,normalizeAttempt,buildAttempt,recordAttempt,updateAttempt,gradeReview,reviewItems,reviewReasonForAttempt,shouldEnterReview,masteryFromAttempts,attemptsForIdea,legacyProgressFromAttempts,summarizeStats,suggestErrorClassification,questionIdentity};
   root.OpenMcatLearner=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
