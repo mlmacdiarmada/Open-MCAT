@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'">
 <title>Open MCAT — question bank</title>
 <style>
   :root{
@@ -2589,8 +2590,22 @@ const RESOURCES=[
 /* ==================== storage / progress ==================== */
 const Learner=window.OpenMcatLearner;
 const store={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
-function getLearning(){return Learner.loadState(localStorage);}
-function getProgress(){return store.get('omcat_prog_v2')||{};}
+/* Per-render caches: without these, mastery() re-parsed the entire learning
+   state from localStorage on every call — and it is called per list row, per
+   sidebar item, and inside the sort comparator (thousands of full JSON.parses
+   per paint). Caches are invalidated at the top of paint() and after any write. */
+const BANK_BY_ID=new Map(BANK.map(q=>[q.id,q]));
+let _learnState=null,_attemptsByIdea=null,_masteryCache=null,_legacyProg=null;
+function invalidateProgressCaches(){_learnState=null;_attemptsByIdea=null;_masteryCache=null;_legacyProg=null;}
+function getLearning(){if(!_learnState)_learnState=Learner.loadState(localStorage);return _learnState;}
+function attemptsByIdea(){
+  if(_attemptsByIdea)return _attemptsByIdea;
+  const map={};const atts=getLearning().attempts||[];
+  for(let k=0;k<atts.length;k++){const qid=atts[k].questionId||'';const i=qid.indexOf('::');if(i<0)continue;const idea=qid.slice(0,i);(map[idea]||(map[idea]=[])).push(atts[k]);}
+  return (_attemptsByIdea=map);
+}
+function getProgress(){if(!_legacyProg)_legacyProg=store.get('omcat_prog_v2')||{};return _legacyProg;}
+function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function getStats(){return store.get('omcat_stats')||{answered:0,correct:0};}
 function recordStats(score,total){const st=getStats();st.answered+=total;st.correct+=score;store.set('omcat_stats',st);}
 function saveProgress(id,score,total,res){
@@ -2599,6 +2614,7 @@ function saveProgress(id,score,total,res){
   if(score>(pr.best||0)){pr.best=score;pr.bestPerQ=res?res.slice():null;}
   pr.perQ=res?res.slice():null;p[id]=pr;store.set('omcat_prog_v2',p);
   recordStats(score,total);
+  invalidateProgressCaches();
 }
 function fmtMs(ms){const s=Math.max(0,Math.round((ms||0)/1000));return s<60?`${s}s`:`${Math.floor(s/60)}m ${s%60}s`;}
 const CONF_LABELS={'confident':'Confident','somewhat':'Somewhat confident','guess':'Educated guess','no-idea':'No idea'};
@@ -2607,6 +2623,7 @@ function recordLearningAttempt(){
   const q=state.quiz,item=state.cur;
   const attempt=Learner.buildAttempt({quiz:q,item,selectedAnswer:state.picked,correctAnswer:item.answer,confidence:state.confidence,startedAt:state.qStartedAt,submittedAt:Date.now(),originalSelectedAnswer:state.originalPicked,mode:'review'});
   const result=Learner.recordAttempt(localStorage,attempt);
+  invalidateProgressCaches();
   state.currentAttemptId=attempt.attemptId;
   return result.ok?attempt:null;
 }
@@ -2721,17 +2738,21 @@ window.startFlagged=function(){const pool=flaggedPool();if(!pool.length)return;
 /* up to 3 sibling ideas sharing the same category code (excluding current) */
 function relatedIdeas(code,curId){return BANK.filter(q=>q.categoryCode===code&&q.id!==curId&&q.id!=='__mixed').slice(0,3);}
 function mastery(id){
-  const idea=BANK.find(q=>q.id===id)||{};
+  if(!_masteryCache)_masteryCache={};
+  if(id in _masteryCache)return _masteryCache[id];
+  const idea=BANK_BY_ID.get(id)||{};
   const total=(idea.questions||[]).length||1;
-  const attempts=Learner.attemptsForIdea(getLearning(),id);
+  const attempts=attemptsByIdea()[id]||[];
+  let res;
   if(attempts.length){
     const m=Learner.masteryFromAttempts(attempts);
-    return {best:Math.round(m.pct/100*total),total,pct:m.pct,done:m.pct>=85,label:m.label,attempts:m.attempts,reason:m.reason,timedPct:m.timedPct,learningPct:m.learningPct};
+    res={best:Math.round(m.pct/100*total),total,pct:m.pct,done:m.pct>=85,label:m.label,attempts:m.attempts,reason:m.reason,timedPct:m.timedPct,learningPct:m.learningPct};
+  }else{
+    const p=getProgress()[id];
+    if(!p)res={best:0,total,pct:0,done:false,label:'Unseen',attempts:0,reason:'No attempts yet.'};
+    else{const pct=Math.round((p.best||0)/total*100);res={best:p.best||0,total,pct,done:pct===100,label:pct===100?'Strong':'Legacy progress',attempts:p.attempts||1,reason:'Legacy best-score progress preserved from the previous model.'};}
   }
-  const p=getProgress()[id];
-  if(!p)return{best:0,total,pct:0,done:false,label:'Unseen',attempts:0,reason:'No attempts yet.'};
-  const pct=Math.round((p.best||0)/total*100);
-  return{best:p.best||0,total,pct,done:pct===100,label:pct===100?'Strong':'Legacy progress',attempts:p.attempts||1,reason:'Legacy best-score progress preserved from the previous model.'};
+  return (_masteryCache[id]=res);
 }
 function getStreak(){return store.get('omcat_streak')||{count:0,last:null};}
 function bumpStreak(){const s=getStreak();const t=new Date().toDateString();if(s.last===t)return;const y=new Date(Date.now()-864e5).toDateString();s.count=(s.last===y)?s.count+1:1;s.last=t;store.set('omcat_streak',s);}
@@ -2759,7 +2780,7 @@ window.go=go;
 function toggleNav(o){const s=document.getElementById('shell');s.classList.toggle('navopen',o===undefined?!s.classList.contains('navopen'):o);}
 window.toggleNav=toggleNav;
 
-function paint(){renderSide();renderTop();renderMain();}
+function paint(){invalidateProgressCaches();renderSide();renderTop();renderMain();}
 
 /* ==================== sidebar ==================== */
 function ideasBySection(code){return BANK.filter(q=>q.sectionCode===code);}
@@ -2791,7 +2812,7 @@ function renderSide(){
     <div class="brand" onclick="go('list',null)"><span class="m">M</span><span class="n">Open MCAT</span></div>
     <div class="search">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-      <input id="search" placeholder="Search ideas" value="${state.search}" oninput="onSearch(this.value)">
+      <input id="search" placeholder="Search ideas" value="${escHtml(state.search)}" oninput="onSearch(this.value)">
       <span class="kbd">/</span>
     </div>
     <div class="navscroll">
@@ -3051,7 +3072,7 @@ window.doSubmit=function(){
   const btn=document.getElementById('submit');btn.textContent=last?'Finish':'Next';btn.disabled=false;btn.setAttribute('onclick','doNext()');btn.focus();
   document.querySelector('.khint').innerHTML=`<span><kbd>⏎</kbd> ${last?'finish':'next'}</span><span><kbd>F</kbd> flag</span><span><kbd>esc</kbd> back</span>`;
 };
-window.updateAttemptError=function(value){if(!state.currentAttemptId)return;Learner.updateAttempt(localStorage,state.currentAttemptId,{errorClassification:value,errorClassificationSuggested:false});};
+window.updateAttemptError=function(value){if(!state.currentAttemptId)return;Learner.updateAttempt(localStorage,state.currentAttemptId,{errorClassification:value,errorClassificationSuggested:false});invalidateProgressCaches();};
 window.doNext=function(){const q=state.quiz,last=state.i===q.questions.length-1;
   if(last){if(q.mixed){recordStats(state.score,q.questions.length);}else{saveProgress(q.id,state.score,q.questions.length,state.res);}bumpStreak();state.view='results';document.querySelector('.main').scrollTo(0,0);paint();}
   else{state.i++;document.querySelector('.main').scrollTo(0,0);renderQuiz();document.getElementById('top')&&renderTop();}};
