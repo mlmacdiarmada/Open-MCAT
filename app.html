@@ -275,6 +275,18 @@
   .rvc.r{border-color:var(--ok-bd);background:var(--ok-bg);} .rvc.w{border-color:var(--no-bd);background:var(--no-bg);}
   .rvmk{margin-left:auto;font-weight:700;padding-left:6px;} .rvmk.ok{color:var(--ok);} .rvmk.no{color:var(--no);}
   .rvr{font-size:13px;color:var(--text2);line-height:1.55;margin:8px 0 0;}
+  .confbar{margin-top:14px;border:1px solid var(--border);border-radius:9px;background:var(--panel);padding:10px 12px;}
+  .confbar .lbl,.errbox label{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:8px;}
+  .confopts{display:flex;gap:7px;flex-wrap:wrap;}
+  .confopts button{font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:6px 9px;cursor:pointer;}
+  .confopts button:hover{border-color:var(--border2);color:var(--text);}
+  .confopts button.on{border-color:var(--accent);background:var(--accent-bg);color:var(--text);}
+  .learnmeta{font-family:var(--mono);font-size:11px;color:var(--text3);display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 2px;}
+  .errbox{margin-top:16px;border:1px solid var(--border);border-radius:9px;background:var(--panel);padding:12px;}
+  .errbox select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13px;}
+  .errbox .hint{font-size:12.5px;color:var(--text3);margin-top:7px;}
+  .datatools{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .datatools .btn{padding:8px 13px;font-size:12.5px;}
 
   /* schedules + anki content */
   .tabs{display:flex;gap:2px;background:var(--raise);border:1px solid var(--border);border-radius:9px;
@@ -394,6 +406,7 @@
   <main class="main"><div id="top"></div><div id="main"></div></main>
 </div>
 
+<script src="learner-core.js"></script>
 <script>
 const DONATE_URL="https://ko-fi.com/makenzimcdermott";
 
@@ -2574,7 +2587,9 @@ const RESOURCES=[
 ];
 
 /* ==================== storage / progress ==================== */
+const Learner=window.OpenMcatLearner;
 const store={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
+function getLearning(){return Learner.loadState(localStorage);}
 function getProgress(){return store.get('omcat_prog_v2')||{};}
 function getStats(){return store.get('omcat_stats')||{answered:0,correct:0};}
 function recordStats(score,total){const st=getStats();st.answered+=total;st.correct+=score;store.set('omcat_stats',st);}
@@ -2585,6 +2600,38 @@ function saveProgress(id,score,total,res){
   pr.perQ=res?res.slice():null;p[id]=pr;store.set('omcat_prog_v2',p);
   recordStats(score,total);
 }
+function fmtMs(ms){const s=Math.max(0,Math.round((ms||0)/1000));return s<60?`${s}s`:`${Math.floor(s/60)}m ${s%60}s`;}
+const CONF_LABELS={'confident':'Confident','somewhat':'Somewhat confident','guess':'Educated guess','no-idea':'No idea'};
+const ERROR_LABELS={'content-gap':'Content gap','misapplied-concept':'Misapplied concept','passage-interpretation':'Passage interpretation','missed-evidence':'Missed evidence','misread-question':'Misread question','fell-for-distractor':'Fell for distractor','calculation-error':'Calculation error','unit-dimensional-analysis':'Unit or dimensional-analysis error','timing-rushing':'Timing or rushing','changed-from-correct':'Changed from correct answer','other':'Other'};
+function recordLearningAttempt(){
+  const q=state.quiz,item=state.cur;
+  const attempt=Learner.buildAttempt({quiz:q,item,selectedAnswer:state.picked,correctAnswer:item.answer,confidence:state.confidence,startedAt:state.qStartedAt,submittedAt:Date.now(),originalSelectedAnswer:state.originalPicked,mode:'review'});
+  const result=Learner.recordAttempt(localStorage,attempt);
+  state.currentAttemptId=attempt.attemptId;
+  return result.ok?attempt:null;
+}
+function exportProgress(){
+  const payload={exportedAt:new Date().toISOString(),learning:getLearning(),legacy:{progress:getProgress(),stats:getStats(),streak:getStreak(),flags:getFlags()}};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`open-mcat-progress-${new Date().toISOString().slice(0,10)}.json`;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+window.exportProgress=exportProgress;
+function importProgressPrompt(){
+  const input=document.createElement('input');input.type='file';input.accept='application/json';
+  input.onchange=()=>{const file=input.files&&input.files[0];if(!file)return;const reader=new FileReader();
+    reader.onload=()=>{try{const payload=JSON.parse(String(reader.result||''));const learning=payload.learning||payload;
+      const imported=Learner.importState(localStorage,JSON.stringify(learning));
+      if(!imported.ok){alert(imported.error);return;}
+      if(payload.legacy){if(payload.legacy.progress)store.set('omcat_prog_v2',payload.legacy.progress);if(payload.legacy.stats)store.set('omcat_stats',payload.legacy.stats);if(payload.legacy.streak)store.set('omcat_streak',payload.legacy.streak);if(payload.legacy.flags)store.set('omcat_flags',payload.legacy.flags);}
+      alert('Progress imported on this device.');paint();
+    }catch(e){alert('Import file is not valid Open-MCAT progress JSON.');}};
+    reader.readAsText(file);
+  };
+  input.click();
+}
+window.importProgressPrompt=importProgressPrompt;
 /* interleaved practice: draw questions across ideas (optionally within the active section) and shuffle */
 function cmpCode(a,b){
   const pa=parseInt(a,10), pb=parseInt(b,10);
@@ -2673,10 +2720,22 @@ window.startFlagged=function(){const pool=flaggedPool();if(!pool.length)return;
   state.i=0;state.score=0;state.picked=null;state.locked=false;state.res=[];state.snap=[];state.view='quiz';document.querySelector('.main').scrollTo(0,0);paint();};
 /* up to 3 sibling ideas sharing the same category code (excluding current) */
 function relatedIdeas(code,curId){return BANK.filter(q=>q.categoryCode===code&&q.id!==curId&&q.id!=='__mixed').slice(0,3);}
-function mastery(id){const p=getProgress()[id];const total=(BANK.find(q=>q.id===id)||{}).questions.length||1;if(!p)return{best:0,total,pct:0,done:false};const pct=Math.round(p.best/total*100);return{best:p.best,total,pct,done:pct===100};}
+function mastery(id){
+  const idea=BANK.find(q=>q.id===id)||{};
+  const total=(idea.questions||[]).length||1;
+  const attempts=Learner.attemptsForIdea(getLearning(),id);
+  if(attempts.length){
+    const m=Learner.masteryFromAttempts(attempts);
+    return {best:Math.round(m.pct/100*total),total,pct:m.pct,done:m.pct>=85,label:m.label,attempts:m.attempts,reason:m.reason,timedPct:m.timedPct,learningPct:m.learningPct};
+  }
+  const p=getProgress()[id];
+  if(!p)return{best:0,total,pct:0,done:false,label:'Unseen',attempts:0,reason:'No attempts yet.'};
+  const pct=Math.round((p.best||0)/total*100);
+  return{best:p.best||0,total,pct,done:pct===100,label:pct===100?'Strong':'Legacy progress',attempts:p.attempts||1,reason:'Legacy best-score progress preserved from the previous model.'};
+}
 function getStreak(){return store.get('omcat_streak')||{count:0,last:null};}
 function bumpStreak(){const s=getStreak();const t=new Date().toDateString();if(s.last===t)return;const y=new Date(Date.now()-864e5).toDateString();s.count=(s.last===y)?s.count+1:1;s.last=t;store.set('omcat_streak',s);}
-function resetProgress(){if(confirm('Clear saved progress, stats, and streak on this device?')){store.del('omcat_prog_v2');store.del('omcat_streak');store.del('omcat_stats');paint();}}
+function resetProgress(){if(confirm('Clear saved progress, learning events, stats, flags, and streak on this device? Export first if you want a backup.')){Learner.resetState(localStorage);store.del('omcat_prog_v2');store.del('omcat_streak');store.del('omcat_stats');store.del('omcat_flags');paint();}}
 window.resetProgress=resetProgress;
 
 /* theme */
@@ -2687,7 +2746,7 @@ window.toggleTheme=toggleTheme;
 setTheme(getTheme());
 
 /* ==================== state / router ==================== */
-let state={view:'list',section:null,cats:[],hyonly:false,sort:'code',search:'',quiz:null,i:0,score:0,picked:null,locked:false,res:[],snap:[],open:{"P/S":true},drill:{filter:'all',cur:null,answered:false,correct:false,val:'',score:{correct:0,total:0}}};
+let state={view:'list',section:null,cats:[],hyonly:false,sort:'code',search:'',quiz:null,i:0,score:0,picked:null,originalPicked:null,locked:false,confidence:'somewhat',qStartedAt:0,currentAttemptId:null,res:[],snap:[],open:{"P/S":true},drill:{filter:'all',cur:null,answered:false,correct:false,val:'',score:{correct:0,total:0}}};
 function go(view,arg){
   if(view==='quiz'){state.quiz=BANK.find(q=>q.id===arg);state.i=0;state.score=0;state.picked=null;state.locked=false;state.res=[];state.snap=[];}
   if(view==='list'&&arg!==undefined)state.section=arg;
@@ -2707,7 +2766,7 @@ function ideasBySection(code){return BANK.filter(q=>q.sectionCode===code);}
 function renderSide(){
   const prog=getProgress();const streak=getStreak();
   const totalQ=BANK.reduce((s,q)=>s+q.questions.length,0);
-  const doneN=BANK.filter(q=>prog[q.id]).length;
+  const doneN=BANK.filter(q=>prog[q.id]||mastery(q.id).attempts).length;
   const secLabel=c=>({"P/S":"Psych / Soc","B/B":"Bio / Biochem","C/P":"Chem / Phys","CARS":"CARS"}[c]||c);
   const tree=SECTIONS.map(sec=>{
     const ideas=ideasBySection(sec.code);const isOpen=!!state.open[sec.code];
@@ -2924,9 +2983,10 @@ function shuffleQ(q0){
   return {...q0,choices:idx.map(i=>q0.choices[i]),why:idx.map(i=>q0.why[i]),answer:idx.indexOf(q0.answer)};
 }
 function renderQuiz(){
-  const q=state.quiz,item=state.cur=shuffleQ(q.questions[state.i]);state.picked=null;state.locked=false;
+  const q=state.quiz,item=state.cur=shuffleQ(q.questions[state.i]);state.picked=null;state.originalPicked=null;state.locked=false;state.confidence='somewhat';state.qStartedAt=Date.now();state.currentAttemptId=null;
   const codeL=q.mixed?item._code:q.categoryCode, catL=q.mixed?(item._sec+' · '+item._cat):q.category, titleL=q.mixed?item._idea:q.idea;
   const flagged=isFlagged(qKey(q,item));
+  const confBtn=(v,k)=>`<button data-conf="${v}" class="${state.confidence===v?'on':''}" onclick="setConfidence('${v}')" aria-pressed="${state.confidence===v}"><kbd>${k}</kbd> ${CONF_LABELS[v]}</button>`;
   document.getElementById('main').innerHTML=`
    <div class="pane narrow">
      <div class="qmeta"><span class="code">${codeL}</span><span class="cat">${catL}</span>
@@ -2940,23 +3000,30 @@ function renderQuiz(){
      <ul class="choices" id="choices" role="radiogroup" aria-label="Answer choices">
        ${item.choices.map((c,x)=>`<li class="choice" tabindex="0" role="radio" aria-checked="false" data-x="${x}" onclick="selectIdx(${x})"><span class="k">${'ABCD'[x]}</span><span>${c}</span></li>`).join('')}
      </ul>
+     <div class="confbar" role="radiogroup" aria-label="Confidence level">
+       <span class="lbl">Confidence</span>
+       <div class="confopts">${confBtn('confident','5')}${confBtn('somewhat','6')}${confBtn('guess','7')}${confBtn('no-idea','8')}</div>
+     </div>
      <div class="actionbar">
-       <div class="khint"><span><kbd>A</kbd>–<kbd>D</kbd> select</span><span><kbd>⏎</kbd> submit</span><span><kbd>F</kbd> flag</span><span><kbd>esc</kbd> back</span></div>
+       <div class="khint"><span><kbd>A</kbd>–<kbd>D</kbd> select</span><span><kbd>5</kbd>–<kbd>8</kbd> confidence</span><span><kbd>⏎</kbd> submit</span><span><kbd>F</kbd> flag</span></div>
        <button class="btn" id="submit" disabled onclick="doSubmit()">Submit</button>
      </div>
      <div class="exp" id="exp" aria-live="polite"></div>
    </div>`;
   const h=document.getElementById('qhead');if(h)h.focus();
 }
+window.setConfidence=function(v){if(state.locked||!CONF_LABELS[v])return;state.confidence=v;document.querySelectorAll('.confopts button').forEach(b=>b.classList.remove('on'));renderQuizConfidence();};
+function renderQuizConfidence(){document.querySelectorAll('.confopts button').forEach(b=>{const on=b.dataset.conf===state.confidence;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});}
 window.uiFlag=function(){const on=toggleFlag(qKey(state.quiz,state.cur));const b=document.getElementById('flagbtn');
   if(b){b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);}};
 window.selectIdx=function(x){if(state.locked)return;const cs=[...document.querySelectorAll('.choice')];if(x<0||x>=cs.length)return;
   cs.forEach(c=>{c.classList.remove('sel');c.setAttribute('aria-checked','false');});
-  cs[x].classList.add('sel');cs[x].setAttribute('aria-checked','true');cs[x].focus();state.picked=x;document.getElementById('submit').disabled=false;};
+  cs[x].classList.add('sel');cs[x].setAttribute('aria-checked','true');cs[x].focus();if(state.originalPicked===null)state.originalPicked=x;state.picked=x;document.getElementById('submit').disabled=false;};
 window.doSubmit=function(){
   if(state.picked===null||state.locked)return;state.locked=true;
   const q=state.quiz,item=state.cur,correct=item.answer,right=state.picked===correct;
-  if(right)state.score++;state.res[state.i]=right;state.snap[state.i]={item,picked:state.picked,right};
+  const attempt=recordLearningAttempt();
+  if(right)state.score++;state.res[state.i]=right;state.snap[state.i]={item,picked:state.picked,right,attempt};
   document.querySelectorAll('.choice').forEach(c=>{const x=+c.dataset.x;c.classList.add('locked');c.classList.remove('sel');c.setAttribute('aria-checked',x===state.picked?'true':'false');
     if(x===correct){c.classList.add('correct');c.insertAdjacentHTML('beforeend','<span class="mk" aria-label="correct answer">✓</span>');}
     else if(x===state.picked){c.classList.add('incorrect');c.insertAdjacentHTML('beforeend','<span class="mk" aria-label="your answer, incorrect">✗</span>');}});
@@ -2966,16 +3033,25 @@ window.doSubmit=function(){
   const rel=!right?relatedIdeas(code,curId):[];
   const relHTML=rel.length?`<div class="related"><h4>Drill this concept</h4>
     ${rel.map(r=>`<button class="relq" onclick="go('quiz','${r.id}')"><span class="code">${r.categoryCode}</span><span class="ri">${r.idea}</span><span class="arw">›</span></button>`).join('')}</div>`:'';
+  const errOptions=Learner.ERROR_CATEGORIES.map(e=>`<option value="${e}" ${attempt&&attempt.errorClassification===e?'selected':''}>${ERROR_LABELS[e]}</option>`).join('');
+  const errHTML=!right&&attempt?`<div class="errbox">
+      <label for="errclass">Error category ${attempt.errorClassificationSuggested?'suggestion':''}</label>
+      <select id="errclass" onchange="updateAttemptError(this.value)">${errOptions}</select>
+      <div class="hint">This is a suggested classification, not a certainty. Edit it if a different mistake type fits better.</div>
+    </div>`:'';
+  const learnHTML=attempt?`<div class="learnmeta"><span>Confidence: ${CONF_LABELS[attempt.confidence]}</span><span>Time: ${fmtMs(attempt.responseTimeMs)}</span>${attempt.changedAnswer?`<span>Changed answer: ${'ABCD'[attempt.originalSelectedAnswer]} → ${'ABCD'[attempt.selectedAnswer]}</span>`:''}</div>`:'';
   const exp=document.getElementById('exp');
   exp.innerHTML=`
     <div class="verdict ${right?'ok':'no'}" role="status">${right?'✓ Correct':'✗ Incorrect · answer '+'ABCD'[correct]}</div>
+    ${learnHTML}
     <p>${item.rationale}</p><h4>Why each choice</h4>
     ${item.why.map((w,x)=>`<div class="why ${x===correct?'r':(x===state.picked&&!right?'w':'')}"><b>${'ABCD'[x]}.</b> ${w}</div>`).join('')}
-    <div class="takeaway"><b>Bank this</b>${item.takeaway}</div>${relHTML}`;
+    <div class="takeaway"><b>Bank this</b>${item.takeaway}</div>${errHTML}${relHTML}`;
   exp.classList.add('show');
   const btn=document.getElementById('submit');btn.textContent=last?'Finish':'Next';btn.disabled=false;btn.setAttribute('onclick','doNext()');btn.focus();
   document.querySelector('.khint').innerHTML=`<span><kbd>⏎</kbd> ${last?'finish':'next'}</span><span><kbd>F</kbd> flag</span><span><kbd>esc</kbd> back</span>`;
 };
+window.updateAttemptError=function(value){if(!state.currentAttemptId)return;Learner.updateAttempt(localStorage,state.currentAttemptId,{errorClassification:value,errorClassificationSuggested:false});};
 window.doNext=function(){const q=state.quiz,last=state.i===q.questions.length-1;
   if(last){if(q.mixed){recordStats(state.score,q.questions.length);}else{saveProgress(q.id,state.score,q.questions.length,state.res);}bumpStreak();state.view='results';document.querySelector('.main').scrollTo(0,0);paint();}
   else{state.i++;document.querySelector('.main').scrollTo(0,0);renderQuiz();document.getElementById('top')&&renderTop();}};
@@ -2995,9 +3071,11 @@ function renderResults(){
     const s=state.snap[x];const ok=state.res[x];
     const iid=mixed?it._id:q.id;const fl=isFlagged(iid+'::'+it.tag);
     const src=mixed&&it._idea?` <span style="color:var(--text3)">— ${it._idea}</span>`:'';
+    const meta=s&&s.attempt?`<div class="learnmeta"><span>${CONF_LABELS[s.attempt.confidence]}</span><span>${fmtMs(s.attempt.responseTimeMs)}</span>${s.attempt.errorClassification?`<span>${ERROR_LABELS[s.attempt.errorClassification]}</span>`:''}</div>`:'';
     const exp=s?`<div class="rrx">
         <div class="rvq">${s.item.stem}</div>
         ${s.item.choices.map((c,ci)=>`<div class="rvc ${ci===s.item.answer?'r':(ci===s.picked&&!s.right?'w':'')}"><b>${'ABCD'[ci]}</b><span>${c}</span>${ci===s.item.answer?'<span class="rvmk ok">✓</span>':(ci===s.picked&&!s.right?'<span class="rvmk no">✗</span>':'')}</div>`).join('')}
+        ${meta}
         <p class="rvr">${s.item.rationale}</p>
         <div class="takeaway"><b>Bank this</b>${s.item.takeaway}</div>
       </div>`:'';
@@ -3250,7 +3328,7 @@ function renderResources(){
 
 function renderAnalytics(){
   const prog=getProgress();const st=getStats();const streak=getStreak();
-  const attempted=BANK.filter(q=>prog[q.id]);
+  const attempted=BANK.filter(q=>prog[q.id]||mastery(q.id).attempts);
   const doneN=BANK.filter(q=>{const m=mastery(q.id);return m.done;}).length;
   const acc=st.answered?Math.round(st.correct/st.answered*100):0;
   if(!attempted.length){
@@ -3268,16 +3346,16 @@ function renderAnalytics(){
     return `<tr><td><b>${c}</b></td><td class="qn">${s.n} idea${s.n>1?'s':''}</td>
       <td><div class="mastery ${full?'full':''}"><span class="mt"><i style="width:${pct}%"></i></span><span class="pc">${pct}%</span></div></td></tr>`;}).join('');
   // ideas ranked weakest first
-  const ranked=attempted.map(q=>({q,m:mastery(q.id),pr:prog[q.id]})).sort((a,b)=>a.m.pct-b.m.pct);
+  const ranked=attempted.map(q=>({q,m:mastery(q.id),pr:prog[q.id]||{attempts:mastery(q.id).attempts,last:null}})).sort((a,b)=>a.m.pct-b.m.pct);
   const ideaRows=ranked.map(({q,m,pr})=>{const last=pr.last!=null?Math.round(pr.last/m.total*100):null;const full=m.done;
     return `<tr onclick="go('quiz','${q.id}')"><td><span class="code">${q.sectionCode} · ${q.categoryCode}</span></td>
-      <td><div class="idea">${q.idea}</div></td>
+      <td><div class="idea">${q.idea}</div><div class="catn">${m.label}${m.reason?` · ${m.reason}`:''}</div></td>
       <td class="qn">${pr.attempts||1}×</td>
       <td class="qn">${last!=null?last+'%':'—'}</td>
       <td><div class="mastery ${full?'full':''}"><span class="mt"><i style="width:${m.pct}%"></i></span><span class="pc">${m.pct}%</span></div></td>
       <td style="text-align:right"><span class="arw">›</span></td></tr>`;}).join('');
   const weakest=ranked[0];
-  const notStarted=BANK.filter(q=>!prog[q.id]);
+  const notStarted=BANK.filter(q=>!prog[q.id]&&!mastery(q.id).attempts);
   const focus=weakest&&weakest.m.pct<100?weakest.q:(notStarted[0]||null);
   const focusNote=focus?(weakest&&weakest.m.pct<100&&focus===weakest.q
       ?`Your lowest mastery is <b>${focus.idea}</b> (${weakest.m.pct}%). Re-drill it and seal the distinctions you keep missing.`
@@ -3291,7 +3369,8 @@ function renderAnalytics(){
        <div><span>ideas mastered</span><b>${doneN}/${BANK.length}</b></div>
        <div><span>streak</span><b>${streak.count}d</b></div>
      </div>
-     <p class="schwho" style="margin-top:6px;font-size:12.5px;color:var(--text3)">Accuracy is cumulative across every attempt. Mastery bars use your best attempt per idea.</p>
+     <p class="schwho" style="margin-top:6px;font-size:12.5px;color:var(--text3)">Accuracy is cumulative across completed sets. Practice mastery uses confidence-aware attempt evidence when available, with legacy best-score progress preserved.</p>
+     <div class="datatools"><button class="btn ghost" onclick="exportProgress()">Export progress JSON</button><button class="btn ghost" onclick="importProgressPrompt()">Import progress JSON</button><button class="btn ghost" onclick="resetProgress()">Reset with confirmation</button></div>
      <div class="cnote"><b>Focus next</b>${focusNote}${focus?` <button class="btn" style="margin-left:6px;padding:6px 14px;font-size:12px" onclick="go('quiz','${focus.id}')">Open →</button>`:''}</div>
      <div class="h-row" style="margin-top:22px"><h1 style="font-size:16px">Mastery by section</h1></div>
      <table class="ctbl"><tr><th>Section</th><th>Attempted</th><th style="width:150px">Mastery</th></tr>${secRows}</table>
@@ -3311,6 +3390,7 @@ document.addEventListener('keydown',e=>{
     if(e.key.toLowerCase()==='f'){e.preventDefault();uiFlag();return;}
     if(!state.locked){
       let idx=-1;const k=e.key.toLowerCase();
+      if(/^[5-8]$/.test(e.key)){e.preventDefault();setConfidence(['confident','somewhat','guess','no-idea'][+e.key-5]);return;}
       if(/^[1-4]$/.test(e.key))idx=+e.key-1;else if(['a','b','c','d'].includes(k))idx='abcd'.indexOf(k);
       if(idx>=0){e.preventDefault();selectIdx(idx);return;}
       if(e.key==='Enter'&&state.picked!==null){e.preventDefault();doSubmit();return;}
